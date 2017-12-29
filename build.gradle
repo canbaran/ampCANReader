@@ -1,0 +1,58 @@
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:3.0.0'
+    }
+}
+
+repositories {
+    mavenLocal()
+    mavenCentral()
+}
+
+apply plugin: 'com.android.application'
+
+repositories {
+    mavenLocal()
+    mavenCentral()
+
+
+}
+
+android {
+    compileSdkVersion 22
+    android.buildToolsVersion "23.0.1"
+    defaultConfig {
+        minSdkVersion 14
+        targetSdkVersion 21
+        applicationId 'com.github.pires.obd.reader'
+    }
+
+    lintOptions {
+        abortOnError false
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+    buildToolsVersion '26.0.2'
+}
+
+dependencies {
+    annotationProcessor 'org.roboguice:roboblender:3.0.1'
+    compile 'com.android.support:appcompat-v7:22.1.1'
+    compile 'com.github.pires:obd-java-api:1.0-RC14'
+    compile 'org.roboguice:roboguice:3.+'
+    provided 'org.roboguice:roboblender:3.+'
+    compile 'com.squareup.retrofit:retrofit:1.9.0'
+    compile 'com.amazonaws:aws-android-sdk-ddb:2.2.+'
+    compile 'com.amazonaws:aws-android-sdk-ddb-mapper:2.2.+'
+    compile group: 'com.google.protobuf', name: 'protobuf-java', version: '3.5.0'
+
+
+}
