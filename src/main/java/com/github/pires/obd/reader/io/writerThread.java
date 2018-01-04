@@ -12,9 +12,15 @@ import com.github.pires.obd.reader.activity.MainActivity;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PipedOutputStream;
+import java.lang.reflect.Array;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.Set;
 import java.util.concurrent.BlockingQueue;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import amp.internal.io.CanMessage;
 
@@ -36,6 +42,7 @@ public class writerThread extends Thread {
     private  ObdGatewayService myService;
     private Long timeStamp;
     private Long threadStartTimeStamp;
+    private ArrayList<Integer> IDArray;
 
 
 //    private Handler hdForUi;
@@ -44,7 +51,8 @@ public class writerThread extends Thread {
                         String incomingHexID,
                         String incomingVehicleID,
                         String incomingUserName,
-                        ObdGatewayService incomingService)
+                        ObdGatewayService incomingService,
+                        ArrayList<Integer> incomingIDArr)
     {
 
         elmInputStream = elmInput;
@@ -56,6 +64,8 @@ public class writerThread extends Thread {
         vehicleID = incomingVehicleID;
         userName = incomingUserName;
         myService = incomingService;
+
+        IDArray = incomingIDArr;
 
 
 //        hdForUi = hd;
@@ -94,7 +104,7 @@ public class writerThread extends Thread {
 
                     curCanData[i] =  readDataFromElm();
                     long t2 = System.nanoTime();
-                    if (curCanData.equals("Exception Occured"))
+                    if (curCanData[i].equals("Exception Occured") || curCanData[i].equals(""))
                         break;
 
                 }
@@ -103,7 +113,7 @@ public class writerThread extends Thread {
                 for (int i=0; i<blockSize; i++) {
                     can_data curData = new can_data(); // us-east-1:0d327241-156d-45e2-9560-4ce6c9192613
                     curData.setTimeStamp(loopStartTimeStamp+i*avgTimeMillis);
-                    curData.setData(curCanData[i]);
+                    curData.setData(hexStringToByteArray(curCanData[i]));
                     curData.setCanID(hexID);
                     curData.setVIN(vehicleID);
                     curData.setCanIDMeaning("Still Hard Coded");
@@ -122,13 +132,25 @@ public class writerThread extends Thread {
         }
     }
 
+    private byte[] hexStringToByteArray(String s) {
+        int len = s.length();
+        byte[] data = new byte[len / 2];
+        for (int i = 0; i < len; i += 2) {
+            data[i / 2] = (byte) ((Character.digit(s.charAt(i), 16) << 4)
+                    + Character.digit(s.charAt(i+1), 16));
+        }
+        return data;
+    }
+
     private String readDataFromElm() {
         StringBuilder res = new StringBuilder();
         byte b = 0;
         char c;
         String temp;
 
-        while( true ) {
+        HashMap<Integer, String> IdDataMap = new HashMap<Integer, String>();
+
+        while( myService.isRunning() ) {
             try {
 
                 b = (byte) elmInputStream.read();
@@ -149,17 +171,49 @@ public class writerThread extends Thread {
                             ((MainActivity) ctxUi).canBUSUpdate( "LISTEN_CAN",  "LISTEN_CAN", byteData );
                         }
                     });
-//                    for (int i=0;i<1e4;i++)
-//                        temp= "introduce delay";
+//                    byteBlock.append(byteData);
+                    if (didGrabAllMsgs(byteData, IdDataMap)) {
 
-                    //assign the timestamp right at this moment
-//                    timeStamp = threadStartTimeStamp + SystemClock.currentThreadTimeMillis();//System.currentTimeMillis();
-//                    Log.d(TAG, "Assigned timestamp: "  + Long.toString(timeStamp));
-                    return byteData;
+                        return concatByteData(IdDataMap);
+                    }
                 }
             }
             res.append(c);
         }
+        return "";
+    }
+
+    private boolean didGrabAllMsgs(String byteData, HashMap<Integer, String> IdDataMap) {
+        ArrayList<Integer> curSessionIDArr = extractIDs(byteData, IdDataMap);
+        return IDArray.equals(curSessionIDArr);
+    }
+
+    private ArrayList<Integer> extractIDs(String byteData, HashMap<Integer, String> IdDataMap) {
+
+        ArrayList<Integer> idArr = new ArrayList<Integer>();
+        Pattern p = Pattern.compile("\\b[a-zA-Z0-9]{3}\\b");
+        Matcher m = p.matcher(byteData);
+        if (m.find()) {
+            int curMsgID = Integer.parseInt(m.group(),16);
+            IdDataMap.put(curMsgID, byteData);
+        }
+        Set<Integer> mySet = IdDataMap.keySet();
+        idArr.addAll(mySet);
+        Collections.sort(idArr);
+        return idArr;
+
+    }
+
+    private String concatByteData(HashMap<Integer, String> IdDataMap) {
+        StringBuilder byteBlock = new StringBuilder();
+        ArrayList<Integer> idArr = new ArrayList<Integer>();
+        Set<Integer> mySet = IdDataMap.keySet();
+        idArr.addAll(mySet);
+        Collections.sort(idArr);
+        for(Integer curKey: idArr) {
+            byteBlock.append(IdDataMap.get(curKey));
+        }
+        return byteBlock.toString();
     }
 
     private void writeToReaderThread(ArrayList<can_data> canDataLs) {

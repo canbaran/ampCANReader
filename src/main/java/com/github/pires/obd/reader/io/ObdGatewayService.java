@@ -76,7 +76,7 @@ import static android.content.ContentValues.TAG;
 public class ObdGatewayService extends AbstractGatewayService {
 
     private int queueSize = 512;
-    private int threadCount = 4;
+    private int threadCount = 2;
 //    private BooleanHolder isMyRunning = new BooleanHolder();
     private int transmittedBatchCount = 0;
 //    private HashMap<String, Boolean> myMap = new HashMap<String, Boolean>();
@@ -91,6 +91,7 @@ public class ObdGatewayService extends AbstractGatewayService {
     private BluetoothSocket sock = null;
     private BluetoothSocket sockFallback = null;
     private AmazonDynamoDBClient ddbClient;
+    private ArrayList<Integer> IDArr = new ArrayList<Integer>();
     DynamoDBMapper mapper;
 
 
@@ -296,7 +297,6 @@ public class ObdGatewayService extends AbstractGatewayService {
 
                         ArrayList<Thread> tLS = new ArrayList<Thread>();
 
-//                        isMyRunning.value = isRunning;
 
                         for (int i=0; i<threadCount; i++ ) {
                             readerThread readerThread = new readerThread(queue, getApplicationContext(),
@@ -306,15 +306,15 @@ public class ObdGatewayService extends AbstractGatewayService {
                             tLS.add(readerThread);
                         }
 
-//                        MutableBoolean driveOn = new MutableBoolean(isRunning());
-
+                        createIDArr();
 
                         writerThread writerThread = new writerThread(queue, sock.getInputStream(),
                                 sock.getOutputStream(), ctx,
                                 prefs.getString(ConfigActivity.CRA_hex, ""),
                                 prefs.getString(ConfigActivity.VEHICLE_ID_KEY, ""),
                                 prefs.getString(ConfigActivity.userName, ""),
-                                this);
+                                this,
+                                IDArr);
                         writerThread.setName("Writer Thread");
 
 
@@ -365,6 +365,17 @@ public class ObdGatewayService extends AbstractGatewayService {
                     }
                 });
             }
+        }
+    }
+
+    private void createIDArr() {
+        String CF = prefs.getString(ConfigActivity.CF_hex, "7ff");
+        String CM = prefs.getString(ConfigActivity.CM_hex, "7ff");
+        int CFHex = Integer.parseInt(CF, 16);
+        int CMHex = Integer.parseInt(CM, 16);
+        int index = 0x7ff-CMHex;
+        for(int i = 0x00; i<= index; i++) {
+            IDArr.add(CFHex+i);
         }
     }
 

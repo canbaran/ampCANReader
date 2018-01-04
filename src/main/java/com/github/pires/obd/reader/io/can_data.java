@@ -13,7 +13,7 @@ public class can_data {
         private String vin;
         private long timestamp;
         private String gps;
-        private String data;
+        private byte[] data;
         private String canID;
         private String canIDMeaning;
 
@@ -46,11 +46,11 @@ public class can_data {
         }
 
         @DynamoDBAttribute(attributeName = "data")
-        public String getData() {
+        public byte[] getData() {
             return data;
         }
 
-        public void setData(String data) {
+        public void setData(byte[] data) {
             this.data = data;
         }
 
