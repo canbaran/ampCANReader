@@ -377,6 +377,9 @@ public class ObdGatewayService extends AbstractGatewayService {
         for(int i = 0x00; i<= index; i++) {
             IDArr.add(CFHex+i);
         }
+//        IDArr.add(0x159);
+//        IDArr.add(0x179);
+//        IDArr.add(0x199);
     }
 
     /**

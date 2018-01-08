@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.os.SystemClock;
+import android.support.annotation.NonNull;
 import android.util.Log;
 
 import com.github.pires.obd.reader.activity.MainActivity;
@@ -43,6 +44,8 @@ public class writerThread extends Thread {
     private Long timeStamp;
     private Long threadStartTimeStamp;
     private ArrayList<Integer> IDArray;
+    private int ourByteLength = 16;
+    private int messageLengthWithID = 19;
 
 
 //    private Handler hdForUi;
@@ -84,7 +87,8 @@ public class writerThread extends Thread {
 
             //issue the atma commands
             try {
-
+//                elmOutputStream.write(("AT CAF0" + "\r").getBytes());
+//                elmOutputStream.flush();
                 elmOutputStream.write(("AT MA" + "\r").getBytes());
                 elmOutputStream.flush();
             } catch (Exception e) {
@@ -110,15 +114,19 @@ public class writerThread extends Thread {
                 }
                 Long b = System.nanoTime();
                 long avgTimeMillis = (b-a)/(blockSize*1000000);
+//                getCurrentLocation();
                 for (int i=0; i<blockSize; i++) {
                     can_data curData = new can_data(); // us-east-1:0d327241-156d-45e2-9560-4ce6c9192613
                     curData.setTimeStamp(loopStartTimeStamp+i*avgTimeMillis);
                     curData.setData(hexStringToByteArray(curCanData[i]));
                     curData.setCanID(hexID);
                     curData.setVIN(vehicleID);
-                    curData.setCanIDMeaning("Still Hard Coded");
-                    curData.setGPS("MY GPS");
+//                    curData.setCanIDMeaning("Still Hard Coded");
+//                    curData.setGPS("MY GPS");
+//                    curData.setLat(curLat);
+//                    curData.setLong(curLong);
                     canDataLs.add(curData);
+
                 }
                 Log.d(TAG, Integer.toString(blockSize) + " points produced: " + Long.toString( (b-a) / (blockSize*1000000) ) + " [ms] per point" );
                 writeToReaderThread(canDataLs);
@@ -135,6 +143,7 @@ public class writerThread extends Thread {
     private byte[] hexStringToByteArray(String s) {
         int len = s.length();
         byte[] data = new byte[len / 2];
+//        Log.d(TAG, s);
         for (int i = 0; i < len; i += 2) {
             data[i / 2] = (byte) ((Character.digit(s.charAt(i), 16) << 4)
                     + Character.digit(s.charAt(i+1), 16));
@@ -142,6 +151,9 @@ public class writerThread extends Thread {
         return data;
     }
 
+
+
+    @NonNull
     private String readDataFromElm() {
         StringBuilder res = new StringBuilder();
         byte b = 0;
@@ -161,22 +173,37 @@ public class writerThread extends Thread {
             c = (char) b;
             if (c == '>' || c == '<' || c == '\r') // read until '>' arrives
             {
-                if (!res.toString().equals("DATA ERROR")) {
-                    final String byteData = res.toString().replaceAll("(\n" +
-                            "|\r" +
-                            "|\\bDATA ERROR\\b)", "");
-                    ((MainActivity) ctxUi).runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            ((MainActivity) ctxUi).canBUSUpdate( "LISTEN_CAN",  "LISTEN_CAN", byteData );
-                        }
-                    });
-//                    byteBlock.append(byteData);
-                    if (didGrabAllMsgs(byteData, IdDataMap)) {
+//                if (!res.toString().equals("DATA ERROR")) {
+                final String byteData = res.toString().replaceAll("(\n" +
+                        "|\r" + "|<" + "|\\bAT\\s?MA\\b" + "|\\s+" +
+                        "|\\bDATA\\s?ERROR\\b)", "");
+                try {
 
-                        return concatByteData(IdDataMap);
+                    Pattern p = Pattern.compile("^[0-9A-F]+$");
+                    Matcher m = p.matcher(byteData);
+//        if (m.find()) {
+                    if (byteData.length() == messageLengthWithID && m.find()) {
+//                        Log.d(TAG, byteData);
+                        ((MainActivity) ctxUi).runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                ((MainActivity) ctxUi).canBUSUpdate("LISTEN_CAN", "LISTEN_CAN", byteData);
+                            }
+                        });
+                        if (didGrabAllMsgs(byteData, IdDataMap)) {
+
+                            return concatByteData(IdDataMap);
+                        }
+
                     }
+//                }
+                    res.delete(0, res.length());
+
+                } catch (Exception e ) {
+                    res.delete(0, res.length());
+                    e.printStackTrace();
                 }
+
             }
             res.append(c);
         }
@@ -191,12 +218,17 @@ public class writerThread extends Thread {
     private ArrayList<Integer> extractIDs(String byteData, HashMap<Integer, String> IdDataMap) {
 
         ArrayList<Integer> idArr = new ArrayList<Integer>();
-        Pattern p = Pattern.compile("\\b[a-zA-Z0-9]{3}\\b");
-        Matcher m = p.matcher(byteData);
-        if (m.find()) {
-            int curMsgID = Integer.parseInt(m.group(),16);
-            IdDataMap.put(curMsgID, byteData);
+//        Pattern p = Psattern.compile("\\b[a-zA-Z0-9]{3}\\b");
+//        Matcher m = p.matcher(byteData);
+//        if (m.find()) {
+        int curMsgID = Integer.parseInt(byteData.substring(0,3),16);
+        String byteDataNoId = byteData.replace(byteData.substring(0,3), "");
+        if(IDArray.contains(curMsgID) && byteDataNoId.length() == ourByteLength) {
+            IdDataMap.put(curMsgID, byteDataNoId);
+        } else {
+            Log.d(TAG, "wrong byte length");
         }
+//        }
         Set<Integer> mySet = IdDataMap.keySet();
         idArr.addAll(mySet);
         Collections.sort(idArr);
