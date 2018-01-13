@@ -106,11 +106,13 @@ public class writerThread extends Thread {
                 for( int i=0; i<blockSize; i++){
 
                     curCanData[i] = readDataFromElm();
-                    long t2 = System.nanoTime();
+//                    long t2 = System.nanoTime();
                     if (curCanData[i].equals("Exception Occured") || curCanData[i].equals(""))
                         break;
 
                 }
+
+
                 Long b = System.nanoTime();
                 long avgTimeMillis = (b-a)/(blockSize*1000000);
 //                getCurrentLocation();
@@ -128,6 +130,12 @@ public class writerThread extends Thread {
 
                 }
                 Log.d(TAG, Integer.toString(blockSize) + " points produced: " + Long.toString( (b-a) / (blockSize*1000000) ) + " [ms] per point" );
+                ((MainActivity) ctxUi).runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        ((MainActivity) ctxUi).canBUSUpdate("SUpdate", "Status Update", "block ready to be sent to the Reader" );
+                    }
+                });
                 writeToReaderThread(canDataLs);
             }
 
@@ -186,12 +194,30 @@ public class writerThread extends Thread {
                                     ((MainActivity) ctxUi).canBUSUpdate("BUFFER", "BUFFER", byteData);
                                 }
                             });
+                            ((MainActivity) ctxUi).runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    ((MainActivity) ctxUi).canBUSUpdate("SUpdate", "Status Update", "BUFFER FULL is Seen" );
+                                }
+                            });
                             bufferFullHit = true;
                             elmOutputStream.write(("AT MA" + "\r").getBytes());
                             elmOutputStream.flush();
+                            ((MainActivity) ctxUi).runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    ((MainActivity) ctxUi).canBUSUpdate("SUpdate", "Status Update", "the Second AT MA is issued" );
+                                }
+                            });
                             Log.d(TAG, "Buffer Full Hit. Re-issuing AT MA");
                         }
                     } else {
+                        ((MainActivity) ctxUi).runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                ((MainActivity) ctxUi).canBUSUpdate("SUpdate", "Status Update", "After 2nd AT MA, Regular flow has started" );
+                            }
+                        });
                         Pattern p = Pattern.compile("^[0-9A-F]+$");
                         Matcher m = p.matcher(byteData);
                         if (byteData.length() == messageLengthWithID && m.find()) {
