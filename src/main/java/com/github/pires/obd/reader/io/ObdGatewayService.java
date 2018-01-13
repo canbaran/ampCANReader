@@ -48,6 +48,7 @@ import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.UUID;
 import java.util.concurrent.ArrayBlockingQueue;
@@ -219,12 +220,12 @@ public class ObdGatewayService extends AbstractGatewayService {
 
 //        queueJob(new ObdCommandJob(new SearchForProtocol()));
 //        queueJob(new ObdCommandJob(new LongMessageOnCommand()));
-        if ( prefs.getString(ConfigActivity.CRA_hex, "").length() > 0 ) {
-            queueJob(new ObdCommandJob(new FilterCan("CRA", prefs.getString(ConfigActivity.CRA_hex, ""))));
-        } else {
-            queueJob(new ObdCommandJob(new FilterCan("CF", prefs.getString(ConfigActivity.CF_hex, "7ff"))));
-            queueJob(new ObdCommandJob(new FilterCan("CM", prefs.getString(ConfigActivity.CM_hex, "7ff"))));
-        }
+//        if ( prefs.getString(ConfigActivity.CRA_hex, "").length() > 0 ) {
+//            queueJob(new ObdCommandJob(new FilterCan("CRA", prefs.getString(ConfigActivity.CRA_hex, ""))));
+//        } else {
+        queueJob(new ObdCommandJob(new FilterCan("CF", prefs.getString(ConfigActivity.CF_hex, "7ff"))));
+        queueJob(new ObdCommandJob(new FilterCan("CM", prefs.getString(ConfigActivity.CM_hex, "7ff"))));
+//        }
 //        queueJob(new ObdCommandJob(new ModuleVoltageCommand()));
 
         queueJob(new ObdCommandJob(new MonitorAllCommand()));
@@ -312,7 +313,7 @@ public class ObdGatewayService extends AbstractGatewayService {
 
                         writerThread writerThread = new writerThread(queue, sock.getInputStream(),
                                 sock.getOutputStream(), ctx,
-                                prefs.getString(ConfigActivity.CRA_hex, ""),
+//                                prefs.getString(ConfigActivity.CRA_hex, ""),
                                 prefs.getString(ConfigActivity.VEHICLE_ID_KEY, ""),
                                 prefs.getString(ConfigActivity.userName, ""),
                                 this,
@@ -334,8 +335,6 @@ public class ObdGatewayService extends AbstractGatewayService {
                         }
 
                         writerThread.join();
-
-
 
 
                     } else {
@@ -376,10 +375,11 @@ public class ObdGatewayService extends AbstractGatewayService {
         String CM = prefs.getString(ConfigActivity.CM_hex, "7ff");
         int CFHex = Integer.parseInt(CF, 16);
         int CMHex = Integer.parseInt(CM, 16);
-        indexKey = 0x7ff-CMHex;
-        for(int i = 0x00; i<= indexKey; i++) {
+        int index = 0x7ff-CMHex;
+        for(int i = 0x00; i<= index; i++) {
             IDArr.add(CFHex+i);
         }
+        indexKey = Collections.max(IDArr);
 //        IDArr.add(0x159);
 //        IDArr.add(0x179);
 //        IDArr.add(0x199);

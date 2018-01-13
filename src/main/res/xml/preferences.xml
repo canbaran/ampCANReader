@@ -5,12 +5,6 @@
         android:title="AWS DATA SPECIFICS">
         <EditTextPreference
             android:defaultValue="false"
-            android:dialogTitle="CAN ID for CRA"
-            android:key="cra_hex_preference"
-            android:summary="CRA ID"
-            android:title="CRA ID" />
-        <EditTextPreference
-            android:defaultValue="false"
             android:dialogTitle="HEX for CF"
             android:key="cf_hex_preference"
             android:summary="CF HEX"

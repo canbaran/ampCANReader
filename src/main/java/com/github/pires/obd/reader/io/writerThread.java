@@ -48,11 +48,8 @@ public class writerThread extends Thread {
     private int messageLengthWithID = 19;
     private int indexKey;
 
-
-//    private Handler hdForUi;
-
     public writerThread(BlockingQueue<ArrayList<can_data>> incomingQ, InputStream elmInput, OutputStream elmOutput, Context ctx,
-                        String incomingHexID,
+//                        String incomingHexID,
                         String incomingVehicleID,
                         String incomingUserName,
                         ObdGatewayService incomingService,
@@ -65,7 +62,7 @@ public class writerThread extends Thread {
         ctxUi = ctx;
         myQ = incomingQ;
 
-        hexID = incomingHexID;
+//        hexID = incomingHexID;
         vehicleID = incomingVehicleID;
         userName = incomingUserName;
         myService = incomingService;
@@ -121,7 +118,7 @@ public class writerThread extends Thread {
                     can_data curData = new can_data(); // us-east-1:0d327241-156d-45e2-9560-4ce6c9192613
                     curData.setTimeStamp(loopStartTimeStamp+i*avgTimeMillis);
                     curData.setData(hexStringToByteArray(curCanData[i]));
-                    curData.setCanID(hexID);
+//                    curData.setCanID(hexID);
                     curData.setVIN(vehicleID);
 //                    curData.setCanIDMeaning("Still Hard Coded");
 //                    curData.setGPS("MY GPS");
@@ -183,6 +180,12 @@ public class writerThread extends Thread {
                 try {
                     if ( !bufferFullHit ) {
                         if (byteData.equals("BUFFERFULL")) {
+                            ((MainActivity) ctxUi).runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    ((MainActivity) ctxUi).canBUSUpdate("BUFFER", "BUFFER", byteData);
+                                }
+                            });
                             bufferFullHit = true;
                             elmOutputStream.write(("AT MA" + "\r").getBytes());
                             elmOutputStream.flush();
@@ -192,10 +195,11 @@ public class writerThread extends Thread {
                         Pattern p = Pattern.compile("^[0-9A-F]+$");
                         Matcher m = p.matcher(byteData);
                         if (byteData.length() == messageLengthWithID && m.find()) {
+
                             ((MainActivity) ctxUi).runOnUiThread(new Runnable() {
                                 @Override
                                 public void run() {
-                                    ((MainActivity) ctxUi).canBUSUpdate("LISTEN_CAN", "LISTEN_CAN", byteData);
+                                    ((MainActivity) ctxUi).canBUSUpdate(byteData.substring(0,3), byteData.substring(0,3), byteData.substring(3));
                                 }
                             });
                             if (didGrabAllMsgs(byteData, IdDataMap)) {
@@ -216,7 +220,7 @@ public class writerThread extends Thread {
             res.append(c);
         }
         return "";
-        //sssss
+
     }
 
     private boolean didGrabAllMsgs(String byteData, HashMap<Integer, String> IdDataMap) {
@@ -246,6 +250,13 @@ public class writerThread extends Thread {
     }
 
     private String concatByteData(HashMap<Integer, String> IdDataMap) {
+
+        //TODO: this needs to be done the way Greg describes in his email. 32element array each 8 byte goes to a specific position
+//        for(i=0;i<8;i++)
+//        {
+//            data[i+(CANID&Index)*8] = MSG[i];
+//        }
+
         StringBuilder byteBlock = new StringBuilder();
         ArrayList<Integer> idArr = new ArrayList<Integer>();
         Set<Integer> mySet = IdDataMap.keySet();
