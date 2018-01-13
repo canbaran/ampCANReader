@@ -184,6 +184,7 @@ public class ObdGatewayService extends AbstractGatewayService {
         Log.d(TAG, "Starting OBD connection..");
         isRunning = true;
         try {
+//            createIDArr();
         	sock = BluetoothManager.connect(dev);
 
         } catch (Exception e2) {
@@ -281,7 +282,7 @@ public class ObdGatewayService extends AbstractGatewayService {
      */
     protected void executeQueue() throws InterruptedException {
         Log.d(TAG, "Executing queue..");
-//        Thread.currentThread()
+
         while (!Thread.currentThread().isInterrupted()) {
             ObdCommandJob job = null;
             try {
@@ -380,6 +381,7 @@ public class ObdGatewayService extends AbstractGatewayService {
             IDArr.add(CFHex+i);
         }
         indexKey = Collections.max(IDArr);
+        Log.d(TAG,  "index KEY: " + Integer.toString(indexKey));
 //        IDArr.add(0x159);
 //        IDArr.add(0x179);
 //        IDArr.add(0x199);

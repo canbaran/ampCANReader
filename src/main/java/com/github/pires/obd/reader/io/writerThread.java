@@ -203,8 +203,30 @@ public class writerThread extends Thread {
                                 }
                             });
                             if (didGrabAllMsgs(byteData, IdDataMap)) {
-
+                                ((MainActivity) ctxUi).runOnUiThread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        ((MainActivity) ctxUi).canBUSUpdate("SUpdate", "Status Update", Integer.toString(indexKey) + " is seen Let's fill up the Upload buffer");
+                                    }
+                                });
                                 return concatByteData(IdDataMap);
+                            } else {
+                                ((MainActivity) ctxUi).runOnUiThread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        ((MainActivity) ctxUi).canBUSUpdate("SUpdate", "Status Update", Integer.toString(indexKey) + " is NOT seen");
+                                    }
+                                });
+                                for (int curKey : IdDataMap.keySet()) {
+                                    final int curkey2 = curKey;
+                                    ((MainActivity) ctxUi).runOnUiThread(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            ((MainActivity) ctxUi).canBUSUpdate("SUpdate", "Status Update", "map has key: " + Integer.toString(curkey2) );
+                                        }
+                                    });
+                                }
+
                             }
 
                         }
@@ -225,7 +247,15 @@ public class writerThread extends Thread {
 
     private boolean didGrabAllMsgs(String byteData, HashMap<Integer, String> IdDataMap) {
         //is index in the hashmap
-        ArrayList<Integer> curSessionIDArr = extractIDs(byteData, IdDataMap);
+//        ArrayList<Integer> curSessionIDArr = extractIDs(byteData, IdDataMap);
+        int curMsgID = Integer.parseInt(byteData.substring(0,3),16);
+        String byteDataNoId = byteData.replace(byteData.substring(0,3), "");
+
+        if (byteDataNoId.length() == ourByteLength) {
+            IdDataMap.put(curMsgID, byteDataNoId);
+        } else {
+            Log.d(TAG, "wrong byte length");
+        }
         return IdDataMap.containsKey(indexKey);
 //        return IDArray.equals(curSessionIDArr);
     }
@@ -236,7 +266,8 @@ public class writerThread extends Thread {
 
         int curMsgID = Integer.parseInt(byteData.substring(0,3),16);
         String byteDataNoId = byteData.replace(byteData.substring(0,3), "");
-        if(IDArray.contains(curMsgID) && byteDataNoId.length() == ourByteLength) {
+
+        if(byteDataNoId.length() == ourByteLength) {
             IdDataMap.put(curMsgID, byteDataNoId);
         } else {
             Log.d(TAG, "wrong byte length");
