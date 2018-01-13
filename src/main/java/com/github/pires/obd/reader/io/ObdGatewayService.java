@@ -92,6 +92,8 @@ public class ObdGatewayService extends AbstractGatewayService {
     private BluetoothSocket sockFallback = null;
     private AmazonDynamoDBClient ddbClient;
     private ArrayList<Integer> IDArr = new ArrayList<Integer>();
+    private int indexKey;
+    //
     DynamoDBMapper mapper;
 
 
@@ -209,13 +211,13 @@ public class ObdGatewayService extends AbstractGatewayService {
 //        queueJob(new ObdCommandJob(new LineFeedOffCommand()));
 
         queueJob(new ObdCommandJob(new ObdResetCommand()));
-        queueJob(new ObdCommandJob(new ObdResetCommand()));
+//        queueJob(new ObdCommandJob(new ObdResetCommand()));
         queueJob(new ObdCommandJob(new EchoOffCommand()));
 //        queueJob(new ObdCommandJob(new TimeoutCommand(1000)));
-        queueJob(new ObdCommandJob(new LineFeedOn()));
+//        queueJob(new ObdCommandJob(new LineFeedOn()));
         queueJob(new ObdCommandJob(new HeaderOnCommand()));
 
-        queueJob(new ObdCommandJob(new SearchForProtocol()));
+//        queueJob(new ObdCommandJob(new SearchForProtocol()));
 //        queueJob(new ObdCommandJob(new LongMessageOnCommand()));
         if ( prefs.getString(ConfigActivity.CRA_hex, "").length() > 0 ) {
             queueJob(new ObdCommandJob(new FilterCan("CRA", prefs.getString(ConfigActivity.CRA_hex, ""))));
@@ -314,7 +316,8 @@ public class ObdGatewayService extends AbstractGatewayService {
                                 prefs.getString(ConfigActivity.VEHICLE_ID_KEY, ""),
                                 prefs.getString(ConfigActivity.userName, ""),
                                 this,
-                                IDArr);
+                                IDArr,
+                                indexKey);
                         writerThread.setName("Writer Thread");
 
 
@@ -373,8 +376,8 @@ public class ObdGatewayService extends AbstractGatewayService {
         String CM = prefs.getString(ConfigActivity.CM_hex, "7ff");
         int CFHex = Integer.parseInt(CF, 16);
         int CMHex = Integer.parseInt(CM, 16);
-        int index = 0x7ff-CMHex;
-        for(int i = 0x00; i<= index; i++) {
+        indexKey = 0x7ff-CMHex;
+        for(int i = 0x00; i<= indexKey; i++) {
             IDArr.add(CFHex+i);
         }
 //        IDArr.add(0x159);

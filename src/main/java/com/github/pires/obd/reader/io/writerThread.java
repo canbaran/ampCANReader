@@ -46,6 +46,7 @@ public class writerThread extends Thread {
     private ArrayList<Integer> IDArray;
     private int ourByteLength = 16;
     private int messageLengthWithID = 19;
+    private int indexKey;
 
 
 //    private Handler hdForUi;
@@ -55,7 +56,8 @@ public class writerThread extends Thread {
                         String incomingVehicleID,
                         String incomingUserName,
                         ObdGatewayService incomingService,
-                        ArrayList<Integer> incomingIDArr)
+                        ArrayList<Integer> incomingIDArr,
+                        int incomingIndexKey)
     {
 
         elmInputStream = elmInput;
@@ -68,8 +70,8 @@ public class writerThread extends Thread {
         userName = incomingUserName;
         myService = incomingService;
 
-        IDArray = incomingIDArr;
-
+//        IDArray = incomingIDArr;
+        indexKey = incomingIndexKey;
 
 //        hdForUi = hd;
     }
@@ -106,7 +108,7 @@ public class writerThread extends Thread {
                 Long a = System.nanoTime();
                 for( int i=0; i<blockSize; i++){
 
-                    curCanData[i] =  readDataFromElm();
+                    curCanData[i] = readDataFromElm();
                     long t2 = System.nanoTime();
                     if (curCanData[i].equals("Exception Occured") || curCanData[i].equals(""))
                         break;
@@ -159,6 +161,7 @@ public class writerThread extends Thread {
         byte b = 0;
         char c;
         String temp;
+        boolean bufferFullHit = false;
 
         HashMap<Integer, String> IdDataMap = new HashMap<Integer, String>();
 
@@ -178,25 +181,30 @@ public class writerThread extends Thread {
                         "|\r" + "|<" + "|\\bAT\\s?MA\\b" + "|\\s+" +
                         "|\\bDATA\\s?ERROR\\b)", "");
                 try {
-
-                    Pattern p = Pattern.compile("^[0-9A-F]+$");
-                    Matcher m = p.matcher(byteData);
-//        if (m.find()) {
-                    if (byteData.length() == messageLengthWithID && m.find()) {
-//                        Log.d(TAG, byteData);
-                        ((MainActivity) ctxUi).runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                ((MainActivity) ctxUi).canBUSUpdate("LISTEN_CAN", "LISTEN_CAN", byteData);
-                            }
-                        });
-                        if (didGrabAllMsgs(byteData, IdDataMap)) {
-
-                            return concatByteData(IdDataMap);
+                    if ( !bufferFullHit ) {
+                        if (byteData.equals("BUFFERFULL")) {
+                            bufferFullHit = true;
+                            elmOutputStream.write(("AT MA" + "\r").getBytes());
+                            elmOutputStream.flush();
+                            Log.d(TAG, "Buffer Full Hit. Re-issuing AT MA");
                         }
+                    } else {
+                        Pattern p = Pattern.compile("^[0-9A-F]+$");
+                        Matcher m = p.matcher(byteData);
+                        if (byteData.length() == messageLengthWithID && m.find()) {
+                            ((MainActivity) ctxUi).runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    ((MainActivity) ctxUi).canBUSUpdate("LISTEN_CAN", "LISTEN_CAN", byteData);
+                                }
+                            });
+                            if (didGrabAllMsgs(byteData, IdDataMap)) {
 
+                                return concatByteData(IdDataMap);
+                            }
+
+                        }
                     }
-//                }
                     res.delete(0, res.length());
 
                 } catch (Exception e ) {
@@ -208,19 +216,20 @@ public class writerThread extends Thread {
             res.append(c);
         }
         return "";
+        //sssss
     }
 
     private boolean didGrabAllMsgs(String byteData, HashMap<Integer, String> IdDataMap) {
+        //is index in the hashmap
         ArrayList<Integer> curSessionIDArr = extractIDs(byteData, IdDataMap);
-        return IDArray.equals(curSessionIDArr);
+        return IdDataMap.containsKey(indexKey);
+//        return IDArray.equals(curSessionIDArr);
     }
 
     private ArrayList<Integer> extractIDs(String byteData, HashMap<Integer, String> IdDataMap) {
 
         ArrayList<Integer> idArr = new ArrayList<Integer>();
-//        Pattern p = Psattern.compile("\\b[a-zA-Z0-9]{3}\\b");
-//        Matcher m = p.matcher(byteData);
-//        if (m.find()) {
+
         int curMsgID = Integer.parseInt(byteData.substring(0,3),16);
         String byteDataNoId = byteData.replace(byteData.substring(0,3), "");
         if(IDArray.contains(curMsgID) && byteDataNoId.length() == ourByteLength) {
@@ -228,7 +237,7 @@ public class writerThread extends Thread {
         } else {
             Log.d(TAG, "wrong byte length");
         }
-//        }
+
         Set<Integer> mySet = IdDataMap.keySet();
         idArr.addAll(mySet);
         Collections.sort(idArr);
