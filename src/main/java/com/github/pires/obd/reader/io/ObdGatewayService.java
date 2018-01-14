@@ -213,6 +213,9 @@ public class ObdGatewayService extends AbstractGatewayService {
 //        queueJob(new ObdCommandJob(new LineFeedOffCommand()));
 
         queueJob(new ObdCommandJob(new ObdResetCommand()));
+        queueJob(new ObdCommandJob(new ObdFormatCommand()));
+        queueJob(new ObdCommandJob(new SpaceOffCommand()));
+
 //        queueJob(new ObdCommandJob(new ObdResetCommand()));
         queueJob(new ObdCommandJob(new EchoOffCommand()));
 //        queueJob(new ObdCommandJob(new TimeoutCommand(1000)));
