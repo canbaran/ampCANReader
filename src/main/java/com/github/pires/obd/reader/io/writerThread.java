@@ -106,11 +106,25 @@ public class writerThread extends Thread {
                 for( int i=0; i<blockSize; i++){
 
                     curCanData[i] = readDataFromElm();
+                    final int iteratorI= i;
+                    ((MainActivity) ctxUi).runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            ((MainActivity) ctxUi).canBUSUpdate("SUpdate7", "Status Update7", "Block For Loop at " + Integer.toString(iteratorI) );
+                        }
+                    });
 //                    long t2 = System.nanoTime();
                     if (curCanData[i].equals("Exception Occured") || curCanData[i].equals(""))
                         break;
 
                 }
+
+                ((MainActivity) ctxUi).runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        ((MainActivity) ctxUi).canBUSUpdate("SUpdate8", "Status Update8", "Block For loop Finished ");
+                    }
+                });
 
 
                 Long b = System.nanoTime();
@@ -197,7 +211,7 @@ public class writerThread extends Thread {
                             ((MainActivity) ctxUi).runOnUiThread(new Runnable() {
                                 @Override
                                 public void run() {
-                                    ((MainActivity) ctxUi).canBUSUpdate("SUpdate", "Status Update", "BUFFER FULL is Seen" );
+                                    ((MainActivity) ctxUi).canBUSUpdate("SUpdate1", "Status Update1", "BUFFER FULL is Seen" );
                                 }
                             });
                             bufferFullHit = true;
@@ -206,7 +220,7 @@ public class writerThread extends Thread {
                             ((MainActivity) ctxUi).runOnUiThread(new Runnable() {
                                 @Override
                                 public void run() {
-                                    ((MainActivity) ctxUi).canBUSUpdate("SUpdate", "Status Update", "the Second AT MA is issued" );
+                                    ((MainActivity) ctxUi).canBUSUpdate("SUpdate2", "Status Update2", "the Second AT MA is issued" );
                                 }
                             });
                             Log.d(TAG, "Buffer Full Hit. Re-issuing AT MA");
@@ -215,7 +229,7 @@ public class writerThread extends Thread {
                         ((MainActivity) ctxUi).runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
-                                ((MainActivity) ctxUi).canBUSUpdate("SUpdate", "Status Update", "After 2nd AT MA, Regular flow has started" );
+                                ((MainActivity) ctxUi).canBUSUpdate("SUpdate3", "Status Update3", "After 2nd AT MA, Regular flow has started" );
                             }
                         });
                         Pattern p = Pattern.compile("^[0-9A-F]+$");
@@ -232,7 +246,7 @@ public class writerThread extends Thread {
                                 ((MainActivity) ctxUi).runOnUiThread(new Runnable() {
                                     @Override
                                     public void run() {
-                                        ((MainActivity) ctxUi).canBUSUpdate("SUpdate", "Status Update", Integer.toString(indexKey) + " is seen Let's fill up the Upload buffer");
+                                        ((MainActivity) ctxUi).canBUSUpdate("SUpdate4", "Status Update4", Integer.toString(indexKey) + " is seen Let's fill up the Upload buffer");
                                     }
                                 });
                                 return concatByteData(IdDataMap);
@@ -240,7 +254,7 @@ public class writerThread extends Thread {
                                 ((MainActivity) ctxUi).runOnUiThread(new Runnable() {
                                     @Override
                                     public void run() {
-                                        ((MainActivity) ctxUi).canBUSUpdate("SUpdate", "Status Update", Integer.toString(indexKey) + " is NOT seen");
+                                        ((MainActivity) ctxUi).canBUSUpdate("SUpdate5", "Status Update5", Integer.toString(indexKey) + " is NOT seen");
                                     }
                                 });
                                 for (int curKey : IdDataMap.keySet()) {
@@ -248,7 +262,7 @@ public class writerThread extends Thread {
                                     ((MainActivity) ctxUi).runOnUiThread(new Runnable() {
                                         @Override
                                         public void run() {
-                                            ((MainActivity) ctxUi).canBUSUpdate("SUpdate", "Status Update", "map has key: " + Integer.toString(curkey2) );
+                                            ((MainActivity) ctxUi).canBUSUpdate("SUpdate6", "Status Update6", "map has key: " + Integer.toString(curkey2) );
                                         }
                                     });
                                 }

@@ -24,6 +24,7 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.os.PowerManager;
 import android.util.Log;
+import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -403,7 +404,6 @@ public class MainActivity extends RoboActivity implements ObdProgressListener, L
         }
 
         gpsInit();
-
         if (!preRequisites) {
             showDialog(BLUETOOTH_DISABLED);
             btStatusTextView.setText(getString(R.string.status_bluetooth_disabled));
@@ -591,10 +591,13 @@ final String devemail = prefs.getString(ConfigActivity.DEV_EMAIL_KEY,null);
         TextView name = new TextView(this);
         name.setGravity(Gravity.RIGHT);
         name.setText(key + ": ");
+        name.setTextSize(TypedValue.COMPLEX_UNIT_PX, 26);
         TextView value = new TextView(this);
+
         value.setGravity(Gravity.LEFT);
         value.setText(val);
         value.setTag(id);
+        value.setTextSize(TypedValue.COMPLEX_UNIT_PX, 26);
         tr.addView(name);
         tr.addView(value);
         tl.addView(tr, params);
