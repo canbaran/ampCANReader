@@ -94,6 +94,8 @@ public class ObdGatewayService extends AbstractGatewayService {
     private AmazonDynamoDBClient ddbClient;
     private ArrayList<Integer> IDArr = new ArrayList<Integer>();
     private int indexKey;
+    private String CM = "";
+    private String CF = "";
     //
     DynamoDBMapper mapper;
 
@@ -103,6 +105,38 @@ public class ObdGatewayService extends AbstractGatewayService {
 
     public void startService() throws IOException {
         Log.d(TAG, "Starting service..");
+        CF = prefs.getString(ConfigActivity.CF_hex, "7ff");
+        ((MainActivity) ctx).runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                ((MainActivity) ctx).canBUSUpdate("BaseCanID", "Base Can ID:",
+                        CF + " (CF" + CF +")");
+            }
+        });
+        String CMEnum = prefs.getString(ConfigActivity.CM_LIST_KEY, null);
+        if (CMEnum!=null) {
+            switch (CMEnum) {
+                case "1":
+                    CM = "7FF";
+                    break;
+                case "2":
+                    CM = "7FE";
+                    break;
+                case "4":
+                    CM = "7FC";
+                    break;
+                case "8":
+                    CM = "7F8";
+                    break;
+                case "16":
+                    CM = "7F0";
+                    break;
+                default:
+                    CM = "7FF";
+            }
+        } else {
+            CM ="7FF";
+        }
 
         // get the remote Bluetooth device
         final String remoteDevice = prefs.getString(ConfigActivity.BLUETOOTH_LIST_KEY, null);
@@ -184,9 +218,7 @@ public class ObdGatewayService extends AbstractGatewayService {
         Log.d(TAG, "Starting OBD connection..");
         isRunning = true;
         try {
-//            createIDArr();
         	sock = BluetoothManager.connect(dev);
-
         } catch (Exception e2) {
         	Log.e(TAG, "There was an error while establishing Bluetooth connection. Stopping app..", e2);
         	stopService();
@@ -205,32 +237,18 @@ public class ObdGatewayService extends AbstractGatewayService {
      * TODO this can be done w/o having to queue jobs by just issuing
      * command.run(), command.getResult() and validate the result.
      */
-//        queueJob(new ObdCommandJob(new BufferDump()));
-//        queueJob(new ObdCommandJob(new ObdResetCommand()));
-//        queueJob(new ObdCommandJob(new TimeoutCommand(1000)));
 
-//        queueJob(new ObdCommandJob(new TimeoutCommand(62)));
-//        queueJob(new ObdCommandJob(new LineFeedOffCommand()));
 
         queueJob(new ObdCommandJob(new ObdResetCommand()));
         queueJob(new ObdCommandJob(new ObdFormatCommand()));
         queueJob(new ObdCommandJob(new SpaceOffCommand()));
-
-//        queueJob(new ObdCommandJob(new ObdResetCommand()));
         queueJob(new ObdCommandJob(new EchoOffCommand()));
-//        queueJob(new ObdCommandJob(new TimeoutCommand(1000)));
-//        queueJob(new ObdCommandJob(new LineFeedOn()));
         queueJob(new ObdCommandJob(new HeaderOnCommand()));
+        queueJob(new ObdCommandJob(new FilterCan("CF", CF)));
 
-//        queueJob(new ObdCommandJob(new SearchForProtocol()));
-//        queueJob(new ObdCommandJob(new LongMessageOnCommand()));
-//        if ( prefs.getString(ConfigActivity.CRA_hex, "").length() > 0 ) {
-//            queueJob(new ObdCommandJob(new FilterCan("CRA", prefs.getString(ConfigActivity.CRA_hex, ""))));
-//        } else {
-        queueJob(new ObdCommandJob(new FilterCan("CF", prefs.getString(ConfigActivity.CF_hex, "7ff"))));
-        queueJob(new ObdCommandJob(new FilterCan("CM", prefs.getString(ConfigActivity.CM_hex, "7ff"))));
-//        }
-//        queueJob(new ObdCommandJob(new ModuleVoltageCommand()));
+
+        queueJob(new ObdCommandJob(new FilterCan("CM", CM)));
+
 
         queueJob(new ObdCommandJob(new MonitorAllCommand()));
 
@@ -376,10 +394,10 @@ public class ObdGatewayService extends AbstractGatewayService {
 
     private void createIDArr() {
         String CF = prefs.getString(ConfigActivity.CF_hex, "7ff");
-        String CM = prefs.getString(ConfigActivity.CM_hex, "7ff");
+//        String CM = prefs.getString(ConfigActivity.CM_hex, "7ff");
         int CFHex = Integer.parseInt(CF, 16);
-        int CMHex = Integer.parseInt(CM, 16);
-        int index = 0x7ff-CMHex;
+//        int CMHex = Integer.parseInt(CM, 16);
+        int index = 0; //0x7ff-CMHex;
         for(int i = 0x00; i<= index; i++) {
             IDArr.add(CFHex+i);
         }

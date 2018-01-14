@@ -27,6 +27,6 @@ public class ObdFormatCommand extends ObdProtocolCommand {
     /** {@inheritDoc} */
     @Override
     public String getName() {
-        return "Format Dongle";
+        return "Format Off";
     }
 }

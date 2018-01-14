@@ -287,6 +287,13 @@ public class MainActivity extends RoboActivity implements ObdProgressListener, L
         } else addTableRow(cmdID, cmdName, cmdResult);
     }
 
+    public void incrementRowVal(String cmdID, String keyName, String newIntVal) {
+        if (vv.findViewWithTag(cmdID) != null) {
+            TextView existingTV = (TextView) vv.findViewWithTag(cmdID);
+            CharSequence curVal = existingTV.getText();
+            existingTV.setText( Integer.toString( Integer.parseInt(curVal.toString()) + 1 ) );
+        } else addTableRow(cmdID, keyName, newIntVal);
+    }
 
     private boolean gpsInit() {
         mLocService = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
@@ -389,6 +396,7 @@ public class MainActivity extends RoboActivity implements ObdProgressListener, L
     protected void onResume() {
         super.onResume();
         Log.d(TAG, "Resuming..");
+
         sensorManager.registerListener(orientListener, orientSensor,
                 SensorManager.SENSOR_DELAY_UI);
         wakeLock = powerManager.newWakeLock(PowerManager.SCREEN_DIM_WAKE_LOCK,

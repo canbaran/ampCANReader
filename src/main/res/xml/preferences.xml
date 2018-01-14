@@ -4,19 +4,19 @@
         android:key="can_data_specifics"
         android:title="AWS DATA SPECIFICS">
         <EditTextPreference
-            android:defaultValue="false"
-            android:dialogTitle="HEX for CF"
+            android:defaultValue="500"
+            android:dialogTitle="CF"
             android:key="cf_hex_preference"
-            android:summary="CF HEX"
-            android:title="CF HEX" />
-        <EditTextPreference
-            android:defaultValue="false"
-            android:dialogTitle="HEX for CM"
+            android:summary="CF"
+            android:title="CF" />
+        <ListPreference
+            android:defaultValue="1"
+            android:dialogTitle="CM"
             android:key="cm_hex_preference"
-            android:summary="CM HEX"
-            android:title="CM HEX" />
+            android:summary="CM"
+            android:title="CM" />
         <EditTextPreference
-            android:defaultValue=""
+            android:defaultValue="1"
             android:dialogTitle="Vehicle ID"
             android:key="vehicle_id_preference"
             android:summary="ID for this Vehicle"

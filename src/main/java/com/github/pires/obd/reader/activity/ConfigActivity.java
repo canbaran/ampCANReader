@@ -53,7 +53,7 @@ public class ConfigActivity extends PreferenceActivity implements OnPreferenceCh
     public static final String DEV_EMAIL_KEY = "dev_email";
     public static final String CRA_hex = "cra_hex_preference";
     public static final String CF_hex = "cf_hex_preference";
-    public static final String CM_hex = "cm_hex_preference";
+    public static final String CM_LIST_KEY = "cm_hex_preference";
     public static final String userName = "name_preference";
 
 
@@ -210,6 +210,8 @@ public class ConfigActivity extends PreferenceActivity implements OnPreferenceCh
         ArrayList<CharSequence> protocolStrings = new ArrayList<>();
         ListPreference listProtocols = (ListPreference) getPreferenceScreen()
                 .findPreference(PROTOCOLS_LIST_KEY);
+        ListPreference listCMOptions = (ListPreference) getPreferenceScreen()
+                .findPreference(CM_LIST_KEY);
         String[] prefKeys = new String[]{ENGINE_DISPLACEMENT_KEY,
                 VOLUMETRIC_EFFICIENCY_KEY, OBD_UPDATE_PERIOD_KEY, MAX_FUEL_ECON_KEY};
         for (String prefKey : prefKeys) {
@@ -243,6 +245,12 @@ public class ConfigActivity extends PreferenceActivity implements OnPreferenceCh
         }
         listProtocols.setEntries(protocolStrings.toArray(new CharSequence[0]));
         listProtocols.setEntryValues(protocolStrings.toArray(new CharSequence[0]));
+
+        //possible CM options
+        CharSequence cmOptions[] = { "1", "2", "4", "8", "16" };
+        listCMOptions.setEntries(cmOptions);
+        listCMOptions.setEntryValues(cmOptions);
+
 
     /*
      * Let's use this device Bluetooth adapter to select which paired OBD-II

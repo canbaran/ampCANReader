@@ -47,6 +47,8 @@ public class writerThread extends Thread {
     private int ourByteLength = 16;
     private int messageLengthWithID = 19;
     private int indexKey;
+//    private int numberOfMessages = 0;
+//    private int numberOfBufferFullErrors = 0;
 
     public writerThread(BlockingQueue<ArrayList<can_data>> incomingQ, InputStream elmInput, OutputStream elmOutput, Context ctx,
 //                        String incomingHexID,
@@ -180,7 +182,7 @@ public class writerThread extends Thread {
         byte b = 0;
         char c;
         String temp;
-        boolean bufferFullHit = false;
+//        boolean bufferFullHit = false;
 
         HashMap<Integer, String> IdDataMap = new HashMap<Integer, String>();
 
@@ -199,39 +201,25 @@ public class writerThread extends Thread {
                 final String byteData = res.toString().replaceAll("(\n" +
                         "|\r" + "|<" + "|\\bAT\\s?MA\\b" + "|\\s+" +
                         "|\\bDATA\\s?ERROR\\b)", "");
+                ((MainActivity) ctxUi).runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        ((MainActivity) ctxUi).incrementRowVal("NumberOfMsgs", "Number of Msgs", "1");
+                    }
+                });
+
                 try {
-                    if ( !bufferFullHit ) {
-                        if (byteData.equals("BUFFERFULL")) {
-                            ((MainActivity) ctxUi).runOnUiThread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    ((MainActivity) ctxUi).canBUSUpdate("BUFFER", "BUFFER", byteData);
-                                }
-                            });
-                            ((MainActivity) ctxUi).runOnUiThread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    ((MainActivity) ctxUi).canBUSUpdate("SUpdate1", "Status Update1", "BUFFER FULL is Seen" );
-                                }
-                            });
-                            bufferFullHit = true;
-                            elmOutputStream.write(("AT MA" + "\r").getBytes());
-                            elmOutputStream.flush();
-                            ((MainActivity) ctxUi).runOnUiThread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    ((MainActivity) ctxUi).canBUSUpdate("SUpdate2", "Status Update2", "the Second AT MA is issued" );
-                                }
-                            });
-                            Log.d(TAG, "Buffer Full Hit. Re-issuing AT MA");
-                        }
-                    } else {
+                    if ( byteData.equals("BUFFERFULL") ) {
                         ((MainActivity) ctxUi).runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
-                                ((MainActivity) ctxUi).canBUSUpdate("SUpdate3", "Status Update3", "After 2nd AT MA, Regular flow has started" );
+                                ((MainActivity) ctxUi).incrementRowVal("BufferFullError", "Buffer Full Error", "1");
                             }
                         });
+                        elmOutputStream.write(("AT MA" + "\r").getBytes());
+                        elmOutputStream.flush();
+                        Log.d(TAG, "Buffer Full Hit. Re-issuing AT MA");
+                    } else {
                         Pattern p = Pattern.compile("^[0-9A-F]+$");
                         Matcher m = p.matcher(byteData);
                         if (byteData.length() == messageLengthWithID && m.find()) {
@@ -266,8 +254,14 @@ public class writerThread extends Thread {
                                         }
                                     });
                                 }
-
                             }
+                        } else {
+                            ((MainActivity) ctxUi).runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    ((MainActivity) ctxUi).incrementRowVal("MessageIncompleteErrors", "Message Incomplete Errors", "1");
+                                }
+                            });
 
                         }
                     }
