@@ -73,28 +73,34 @@ public class readerThread extends Thread {
                 String SubmissionStatus = "sent";
                 List<DynamoDBMapper.FailedBatch> temp = null;
                 while (myService.isRunning() || myQ.size()>0) {
+
                     myQ.drainTo(myInternalQ, myInternalQ.remainingCapacity());
+
                     while (myInternalQ.size()>0) {
+                        ((MainActivity) ctxUi).runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                ((MainActivity) ctxUi).canBUSUpdate( "blocksRemaining",  "# of Blocks Remaining",  Integer.toString(myInternalQ.size()));
+                            }
+                        });
                         ArrayList<can_data> canDataLs = myInternalQ.take();
                         ArrayList<can_data> cleanArr = removeDuplicateTs(canDataLs);
                         Long a = System.currentTimeMillis();
                         try {
-                            temp = mapper.batchSave(cleanArr);
-                            if (temp.size() == canDataLs.size()) {
-                                SubmissionStatus = "Nothing is sent";
-                             } else if ( temp.size() == 0 ) {
-                                SubmissionStatus = "Batch Fully Sent";
-                            } else {
-                                SubmissionStatus = "Batch Partially sent";
-                            }
+                            mapper.batchSave(cleanArr);
+//                            if (temp.size() == canDataLs.size()) {
+//                                SubmissionStatus = "Nothing is sent";
+//                             } else if ( temp.size() == 0 ) {
+//                                SubmissionStatus = "Batch Fully Sent";
+//                            } else {
+//                                SubmissionStatus = "Batch Partially sent";
+//                            }
                             myService.setBatchCount( myService.getBatchCount() + cleanArr.size());
                         } catch (Exception e) {
                             e.printStackTrace();
-                            SubmissionStatus = "Failed to Send";
+//                            SubmissionStatus = "Failed to Send";
                         }
-                        final String submissionStatus2 = "Current Batch: "+ SubmissionStatus + "\n # of Points Sent:" +
-                                Integer.toString(myService.getBatchCount()) +
-                                "\n Remaining # of Batches to Upload: " + Integer.toString(myQ.size() + myInternalQ.size() );
+                        final String submissionStatus2 = "# of Blocks Sent:" + Integer.toString(myService.getBatchCount());
                         ((MainActivity) ctxUi).runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
@@ -103,7 +109,7 @@ public class readerThread extends Thread {
                         });
 
                         Long b = System.currentTimeMillis();
-                        Log.d(TAG, this.getName() + " Time to upload to AWS: "+ Long.toString(b-a) + " [ms] " + Integer.toString(canDataLs.size() - temp.size() ) + " elements" + " per element " + Double.toString( (b-a) / (canDataLs.size() - temp.size())  ) + " [ms]");
+                        Log.d(TAG, this.getName() + " Time to upload to AWS: "+ Long.toString(b-a) + " [ms] " + Integer.toString(canDataLs.size()  ) + " elements" + " per element " + Double.toString( (b-a) / (canDataLs.size() )  ) + " [ms]");
 //                        Log.d(TAG, this.getName()+ " The Size of the main queue is " + myQ.size());
 //					}
                     }

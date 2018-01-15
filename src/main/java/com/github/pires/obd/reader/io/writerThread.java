@@ -121,12 +121,12 @@ public class writerThread extends Thread {
 
                 }
 
-                ((MainActivity) ctxUi).runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        ((MainActivity) ctxUi).canBUSUpdate("SUpdate8", "Status Update8", "Block For loop Finished ");
-                    }
-                });
+//                ((MainActivity) ctxUi).runOnUiThread(new Runnable() {
+//                    @Override
+//                    public void run() {
+//                        ((MainActivity) ctxUi).canBUSUpdate("SUpdate8", "Status Update8", "Block For loop Finished ");
+//                    }
+//                });
 
 
                 Long b = System.nanoTime();
@@ -146,12 +146,12 @@ public class writerThread extends Thread {
 
                 }
                 Log.d(TAG, Integer.toString(blockSize) + " points produced: " + Long.toString( (b-a) / (blockSize*1000000) ) + " [ms] per point" );
-                ((MainActivity) ctxUi).runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        ((MainActivity) ctxUi).canBUSUpdate("SUpdate", "Status Update", "block ready to be sent to the Reader" );
-                    }
-                });
+//                ((MainActivity) ctxUi).runOnUiThread(new Runnable() {
+//                    @Override
+//                    public void run() {
+//                        ((MainActivity) ctxUi).canBUSUpdate("SUpdate", "Status Update", "block ready to be sent to the Reader" );
+//                    }
+//                });
                 writeToReaderThread(canDataLs);
             }
 
@@ -201,13 +201,6 @@ public class writerThread extends Thread {
                 final String byteData = res.toString().replaceAll("(\n" +
                         "|\r" + "|<" + "|\\bAT\\s?MA\\b" + "|\\s+" +
                         "|\\bDATA\\s?ERROR\\b)", "");
-                ((MainActivity) ctxUi).runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        ((MainActivity) ctxUi).incrementRowVal("NumberOfMsgs", "Number of Msgs", "1");
-                    }
-                });
-
                 try {
                     if ( byteData.equals("BUFFERFULL") ) {
                         ((MainActivity) ctxUi).runOnUiThread(new Runnable() {
@@ -234,27 +227,27 @@ public class writerThread extends Thread {
                                 ((MainActivity) ctxUi).runOnUiThread(new Runnable() {
                                     @Override
                                     public void run() {
-                                        ((MainActivity) ctxUi).canBUSUpdate("SUpdate4", "Status Update4", Integer.toString(indexKey) + " is seen Let's fill up the Upload buffer");
+                                        ((MainActivity) ctxUi).incrementRowVal("properBlock", " # Proper Blocks Received: ", "1");
                                     }
                                 });
                                 return concatByteData(IdDataMap);
-                            } else {
-                                ((MainActivity) ctxUi).runOnUiThread(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        ((MainActivity) ctxUi).canBUSUpdate("SUpdate5", "Status Update5", Integer.toString(indexKey) + " is NOT seen");
-                                    }
-                                });
-                                for (int curKey : IdDataMap.keySet()) {
-                                    final int curkey2 = curKey;
-                                    ((MainActivity) ctxUi).runOnUiThread(new Runnable() {
-                                        @Override
-                                        public void run() {
-                                            ((MainActivity) ctxUi).canBUSUpdate("SUpdate6", "Status Update6", "map has key: " + Integer.toString(curkey2) );
-                                        }
-                                    });
-                                }
-                            }
+                            } //else {
+//                                ((MainActivity) ctxUi).runOnUiThread(new Runnable() {
+//                                    @Override
+//                                    public void run() {
+//                                        ((MainActivity) ctxUi).canBUSUpdate("SUpdate5", "Status Update5", Integer.toString(indexKey) + " is NOT seen");
+//                                    }
+//                                });
+//                                for (int curKey : IdDataMap.keySet()) {
+//                                    final int curkey2 = curKey;
+//                                    ((MainActivity) ctxUi).runOnUiThread(new Runnable() {
+//                                        @Override
+//                                        public void run() {
+//                                            ((MainActivity) ctxUi).canBUSUpdate("SUpdate6", "Status Update6", "map has key: " + Integer.toString(curkey2) );
+//                                        }
+//                                    });
+//                                }
+                            //}
                         } else {
                             ((MainActivity) ctxUi).runOnUiThread(new Runnable() {
                                 @Override
@@ -262,7 +255,6 @@ public class writerThread extends Thread {
                                     ((MainActivity) ctxUi).incrementRowVal("MessageIncompleteErrors", "Message Incomplete Errors", "1");
                                 }
                             });
-
                         }
                     }
                     res.delete(0, res.length());
@@ -339,10 +331,10 @@ public class writerThread extends Thread {
 //        curCanMsg.setCanData(curCanData);
 //        curCanMsg.setTimestamp(System.currentTimeMillis());
         try {
-            Long a = System.currentTimeMillis();
+//            Long a = System.currentTimeMillis();
             myQ.put(canDataLs);
 //            curCanMsg.build().writeDelimitedTo(_os);
-            Long b = System.currentTimeMillis();
+//            Long b = System.currentTimeMillis();
 //            Log.d(TAG, "Time it took to write into the Reader Pipe: " + Long.toString(b-a) + " [ms]");
 //            System.out.println("[COMPLETED] WriterThread submitted: " + curCanData);
         } catch (Exception e) {

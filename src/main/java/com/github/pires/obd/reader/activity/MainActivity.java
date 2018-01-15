@@ -599,13 +599,13 @@ final String devemail = prefs.getString(ConfigActivity.DEV_EMAIL_KEY,null);
         TextView name = new TextView(this);
         name.setGravity(Gravity.RIGHT);
         name.setText(key + ": ");
-        name.setTextSize(TypedValue.COMPLEX_UNIT_PX, 26);
+        name.setTextSize(TypedValue.COMPLEX_UNIT_PX, 20);
         TextView value = new TextView(this);
 
         value.setGravity(Gravity.LEFT);
         value.setText(val);
         value.setTag(id);
-        value.setTextSize(TypedValue.COMPLEX_UNIT_PX, 26);
+        value.setTextSize(TypedValue.COMPLEX_UNIT_PX, 20);
         tr.addView(name);
         tr.addView(value);
         tl.addView(tr, params);

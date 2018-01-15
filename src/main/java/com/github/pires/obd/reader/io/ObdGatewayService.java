@@ -105,6 +105,7 @@ public class ObdGatewayService extends AbstractGatewayService {
 
     public void startService() throws IOException {
         Log.d(TAG, "Starting service..");
+        String CMEnum;
         CF = prefs.getString(ConfigActivity.CF_hex, "7ff");
         ((MainActivity) ctx).runOnUiThread(new Runnable() {
             @Override
@@ -113,7 +114,7 @@ public class ObdGatewayService extends AbstractGatewayService {
                         CF + " (CF" + CF +")");
             }
         });
-        String CMEnum = prefs.getString(ConfigActivity.CM_LIST_KEY, null);
+        CMEnum = prefs.getString(ConfigActivity.CM_LIST_KEY, null);
         if (CMEnum!=null) {
             switch (CMEnum) {
                 case "1":
@@ -135,8 +136,17 @@ public class ObdGatewayService extends AbstractGatewayService {
                     CM = "7FF";
             }
         } else {
+            CMEnum = "1";
             CM ="7FF";
         }
+        final String CMEnum2 = CMEnum;
+
+        ((MainActivity) ctx).runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                ((MainActivity) ctx).canBUSUpdate("NumberOfMsgs", "Number of Msgs:", CMEnum2 + "(CM" + CM + ")");
+            }
+        });
 
         // get the remote Bluetooth device
         final String remoteDevice = prefs.getString(ConfigActivity.BLUETOOTH_LIST_KEY, null);
