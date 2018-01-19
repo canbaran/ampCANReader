@@ -195,28 +195,28 @@ public class writerThread extends Thread {
 
         while( myService.isRunning() ) {
             try {
-                ((MainActivity) ctxUi).runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        ((MainActivity) ctxUi).canBUSUpdate(elmDeviceStatus, elmDeviceStatus, "About to Read from ELM" );
-                    }
-                });
+//                ((MainActivity) ctxUi).runOnUiThread(new Runnable() {
+//                    @Override
+//                    public void run() {
+//                        ((MainActivity) ctxUi).canBUSUpdate(elmDeviceStatus, elmDeviceStatus, "About to Read from ELM" );
+//                    }
+//                });
                 b = (byte) elmInputStream.read();
-                ((MainActivity) ctxUi).runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        ((MainActivity) ctxUi).canBUSUpdate(elmDeviceStatus, elmDeviceStatus, "Read Success" );
-                    }
-                });
+//                ((MainActivity) ctxUi).runOnUiThread(new Runnable() {
+//                    @Override
+//                    public void run() {
+//                        ((MainActivity) ctxUi).canBUSUpdate(elmDeviceStatus, elmDeviceStatus, "Read Success" );
+//                    }
+//                });
             } catch (Exception e) {
                 e.printStackTrace();
                 final String eMessage =e.getMessage();
-                ((MainActivity) ctxUi).runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        ((MainActivity) ctxUi).canBUSUpdate(elmDeviceStatus, elmDeviceStatus, "Read Success" );
-                    }
-                });
+//                ((MainActivity) ctxUi).runOnUiThread(new Runnable() {
+//                    @Override
+//                    public void run() {
+//                        ((MainActivity) ctxUi).canBUSUpdate(elmDeviceStatus, elmDeviceStatus, "Read Success" );
+//                    }
+//                });
                 return "Exception Occured";
             }
             c = (char) b;

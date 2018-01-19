@@ -65,12 +65,12 @@ public class readerThread extends Thread {
         {
             try
             {
-                ((MainActivity) ctxUi).runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        ((MainActivity) ctxUi).canBUSUpdate( awsUploadStatus,  awsUploadStatus,  "Uploader Started");
-                    }
-                });
+//                ((MainActivity) ctxUi).runOnUiThread(new Runnable() {
+//                    @Override
+//                    public void run() {
+//                        ((MainActivity) ctxUi).canBUSUpdate( awsUploadStatus,  awsUploadStatus,  "Uploader Started");
+//                    }
+//                });
                 CognitoCachingCredentialsProvider credentialsProvider = new CognitoCachingCredentialsProvider(
                         appContext,
                         "us-east-1:2ee7fe14-536e-4291-898a-e8408bce1040", // Identity pool ID
@@ -82,21 +82,21 @@ public class readerThread extends Thread {
                 String SubmissionStatus = "sent";
                 List<DynamoDBMapper.FailedBatch> temp = null;
                 while (myService.isRunning() || myQ.size()>0) {
-                    ((MainActivity) ctxUi).runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            ((MainActivity) ctxUi).canBUSUpdate( awsUploadStatus,  awsUploadStatus,  "AWS Objects Created");
-                        }
-                    });
+//                    ((MainActivity) ctxUi).runOnUiThread(new Runnable() {
+//                        @Override
+//                        public void run() {
+//                            ((MainActivity) ctxUi).canBUSUpdate( awsUploadStatus,  awsUploadStatus,  "AWS Objects Created");
+//                        }
+//                    });
                     myQ.drainTo(myInternalQ, myInternalQ.remainingCapacity());
 
                     while (myInternalQ.size()>0) {
-                        ((MainActivity) ctxUi).runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                ((MainActivity) ctxUi).canBUSUpdate( awsUploadStatus,  awsUploadStatus,  Integer.toString(myInternalQ.size()));
-                            }
-                        });
+//                        ((MainActivity) ctxUi).runOnUiThread(new Runnable() {
+//                            @Override
+//                            public void run() {
+//                                ((MainActivity) ctxUi).canBUSUpdate( awsUploadStatus,  awsUploadStatus,  Integer.toString(myInternalQ.size()));
+//                            }
+//                        });
                         ArrayList<can_data> canDataLs = myInternalQ.take();
                         ArrayList<can_data> cleanArr = removeDuplicateTs(canDataLs);
                         Long a = System.currentTimeMillis();
@@ -107,12 +107,12 @@ public class readerThread extends Thread {
                             e.printStackTrace();
                         }
                         final String submissionStatus2 = "# of Blocks Sent:" + Integer.toString(myService.getBatchCount());
-                        ((MainActivity) ctxUi).runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                ((MainActivity) ctxUi).canBUSUpdate( awsUploadStatus,  awsUploadStatus,  submissionStatus2);
-                            }
-                        });
+//                        ((MainActivity) ctxUi).runOnUiThread(new Runnable() {
+//                            @Override
+//                            public void run() {
+//                                ((MainActivity) ctxUi).canBUSUpdate( awsUploadStatus,  awsUploadStatus,  submissionStatus2);
+//                            }
+//                        });
                         Long b = System.currentTimeMillis();
                         Log.d(TAG, this.getName() + " Time to upload to AWS: "+ Long.toString(b-a) + " [ms] " + Integer.toString(canDataLs.size()  ) + " elements" + " per element " + Double.toString( (b-a) / (canDataLs.size() )  ) + " [ms]");
                     }
