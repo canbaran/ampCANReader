@@ -63,6 +63,8 @@ import com.amazonaws.mobileconnectors.dynamodbv2.dynamodbmapper.*;
 import amp.internal.io.CanMessage;
 
 import static android.content.ContentValues.TAG;
+import static com.github.pires.obd.reader.io.uiNotificationIds.awsUploadStatus;
+import static com.github.pires.obd.reader.io.uiNotificationIds.elmDeviceStatus;
 
 /**
  * This service is primarily responsible for establishing and maintaining a
@@ -355,11 +357,22 @@ public class ObdGatewayService extends AbstractGatewayService {
 
 
 
-
+                        ((MainActivity) ctx).runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                ((MainActivity) ctx).canBUSUpdate( awsUploadStatus,  awsUploadStatus,  "Uploader Threads are started");
+                            }
+                        });
                         for (int i=0; i<tLS.size(); i++) {
                             tLS.get(i).start();
                         }
 
+                        ((MainActivity) ctx).runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                ((MainActivity) ctx).canBUSUpdate( elmDeviceStatus,  elmDeviceStatus,  "About to Connect to Elm");
+                            }
+                        });
                         writerThread.start();
 
                         for (int i=0; i<tLS.size(); i++) {
@@ -406,8 +419,8 @@ public class ObdGatewayService extends AbstractGatewayService {
         String CF = prefs.getString(ConfigActivity.CF_hex, "7ff");
 //        String CM = prefs.getString(ConfigActivity.CM_hex, "7ff");
         int CFHex = Integer.parseInt(CF, 16);
-//        int CMHex = Integer.parseInt(CM, 16);
-        int index = 0; //0x7ff-CMHex;
+        int CMHex = Integer.parseInt(CM, 16);
+        int index = 0x7ff-CMHex;
         for(int i = 0x00; i<= index; i++) {
             IDArr.add(CFHex+i);
         }

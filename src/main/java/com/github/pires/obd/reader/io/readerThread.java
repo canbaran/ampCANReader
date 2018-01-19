@@ -25,10 +25,12 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
+import com.github.pires.obd.reader.io.uiNotificationIds;
 
 import amp.internal.io.CanMessage;
 
 import static android.content.ContentValues.TAG;
+import static com.github.pires.obd.reader.io.uiNotificationIds.awsUploadStatus;
 
 /**
  * Created by canbaran on 12/21/17.
@@ -63,6 +65,12 @@ public class readerThread extends Thread {
         {
             try
             {
+                ((MainActivity) ctxUi).runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        ((MainActivity) ctxUi).canBUSUpdate( awsUploadStatus,  awsUploadStatus,  "Uploader Started");
+                    }
+                });
                 CognitoCachingCredentialsProvider credentialsProvider = new CognitoCachingCredentialsProvider(
                         appContext,
                         "us-east-1:2ee7fe14-536e-4291-898a-e8408bce1040", // Identity pool ID
@@ -70,17 +78,23 @@ public class readerThread extends Thread {
                 );
                 AmazonDynamoDBClient ddbClient = new AmazonDynamoDBClient(credentialsProvider);
                 DynamoDBMapper mapper = new DynamoDBMapper(ddbClient);
+
                 String SubmissionStatus = "sent";
                 List<DynamoDBMapper.FailedBatch> temp = null;
                 while (myService.isRunning() || myQ.size()>0) {
-
+                    ((MainActivity) ctxUi).runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            ((MainActivity) ctxUi).canBUSUpdate( awsUploadStatus,  awsUploadStatus,  "AWS Objects Created");
+                        }
+                    });
                     myQ.drainTo(myInternalQ, myInternalQ.remainingCapacity());
 
                     while (myInternalQ.size()>0) {
                         ((MainActivity) ctxUi).runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
-                                ((MainActivity) ctxUi).canBUSUpdate( "blocksRemaining",  "# of Blocks Remaining",  Integer.toString(myInternalQ.size()));
+                                ((MainActivity) ctxUi).canBUSUpdate( awsUploadStatus,  awsUploadStatus,  Integer.toString(myInternalQ.size()));
                             }
                         });
                         ArrayList<can_data> canDataLs = myInternalQ.take();
@@ -88,30 +102,19 @@ public class readerThread extends Thread {
                         Long a = System.currentTimeMillis();
                         try {
                             mapper.batchSave(cleanArr);
-//                            if (temp.size() == canDataLs.size()) {
-//                                SubmissionStatus = "Nothing is sent";
-//                             } else if ( temp.size() == 0 ) {
-//                                SubmissionStatus = "Batch Fully Sent";
-//                            } else {
-//                                SubmissionStatus = "Batch Partially sent";
-//                            }
                             myService.setBatchCount( myService.getBatchCount() + cleanArr.size());
                         } catch (Exception e) {
                             e.printStackTrace();
-//                            SubmissionStatus = "Failed to Send";
                         }
                         final String submissionStatus2 = "# of Blocks Sent:" + Integer.toString(myService.getBatchCount());
                         ((MainActivity) ctxUi).runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
-                                ((MainActivity) ctxUi).canBUSUpdate( "AWS_UPLOAD",  "AWS_UPLOAD",  submissionStatus2);
+                                ((MainActivity) ctxUi).canBUSUpdate( awsUploadStatus,  awsUploadStatus,  submissionStatus2);
                             }
                         });
-
                         Long b = System.currentTimeMillis();
                         Log.d(TAG, this.getName() + " Time to upload to AWS: "+ Long.toString(b-a) + " [ms] " + Integer.toString(canDataLs.size()  ) + " elements" + " per element " + Double.toString( (b-a) / (canDataLs.size() )  ) + " [ms]");
-//                        Log.d(TAG, this.getName()+ " The Size of the main queue is " + myQ.size());
-//					}
                     }
                 }
 

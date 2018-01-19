@@ -26,6 +26,7 @@ import java.util.regex.Pattern;
 import amp.internal.io.CanMessage;
 
 import static android.content.ContentValues.TAG;
+import static com.github.pires.obd.reader.io.uiNotificationIds.elmDeviceStatus;
 
 /**
  * Created by canbaran on 12/21/17.
@@ -90,6 +91,12 @@ public class writerThread extends Thread {
             try {
 //                elmOutputStream.write(("AT CAF0" + "\r").getBytes());
 //                elmOutputStream.flush();
+                ((MainActivity) ctxUi).runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        ((MainActivity) ctxUi).canBUSUpdate( elmDeviceStatus,  elmDeviceStatus,  "Initial AT MA Sent");
+                    }
+                });
                 elmOutputStream.write(("AT MA" + "\r").getBytes());
                 elmOutputStream.flush();
             } catch (Exception e) {
@@ -112,7 +119,7 @@ public class writerThread extends Thread {
                     ((MainActivity) ctxUi).runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            ((MainActivity) ctxUi).canBUSUpdate("SUpdate7", "Status Update7", "Block For Loop at " + Integer.toString(iteratorI) );
+                            ((MainActivity) ctxUi).canBUSUpdate(elmDeviceStatus, elmDeviceStatus, "Block For Loop at " + Integer.toString(iteratorI) );
                         }
                     });
 //                    long t2 = System.nanoTime();
@@ -188,10 +195,28 @@ public class writerThread extends Thread {
 
         while( myService.isRunning() ) {
             try {
-
+                ((MainActivity) ctxUi).runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        ((MainActivity) ctxUi).canBUSUpdate(elmDeviceStatus, elmDeviceStatus, "About to Read from ELM" );
+                    }
+                });
                 b = (byte) elmInputStream.read();
+                ((MainActivity) ctxUi).runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        ((MainActivity) ctxUi).canBUSUpdate(elmDeviceStatus, elmDeviceStatus, "Read Success" );
+                    }
+                });
             } catch (Exception e) {
                 e.printStackTrace();
+                final String eMessage =e.getMessage();
+                ((MainActivity) ctxUi).runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        ((MainActivity) ctxUi).canBUSUpdate(elmDeviceStatus, elmDeviceStatus, "Read Success" );
+                    }
+                });
                 return "Exception Occured";
             }
             c = (char) b;
