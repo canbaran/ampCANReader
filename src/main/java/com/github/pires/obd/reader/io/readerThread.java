@@ -106,14 +106,15 @@ public class readerThread extends Thread {
                         } catch (Exception e) {
                             e.printStackTrace();
                         }
-                        final String submissionStatus2 = "# of Blocks Sent:" + Integer.toString(myService.getBatchCount());
-//                        ((MainActivity) ctxUi).runOnUiThread(new Runnable() {
-//                            @Override
-//                            public void run() {
-//                                ((MainActivity) ctxUi).canBUSUpdate( awsUploadStatus,  awsUploadStatus,  submissionStatus2);
-//                            }
-//                        });
                         Long b = System.currentTimeMillis();
+                        final String submissionStatus2 = "# of Blocks Sent:" + Integer.toString(myService.getBatchCount());
+                        ((MainActivity) ctxUi).runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                ((MainActivity) ctxUi).canBUSUpdate( awsUploadStatus,  awsUploadStatus,  submissionStatus2);
+                            }
+                        });
+
                         Log.d(TAG, this.getName() + " Time to upload to AWS: "+ Long.toString(b-a) + " [ms] " + Integer.toString(canDataLs.size()  ) + " elements" + " per element " + Double.toString( (b-a) / (canDataLs.size() )  ) + " [ms]");
                     }
                 }
