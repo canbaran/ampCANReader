@@ -8,6 +8,7 @@ import android.os.SystemClock;
 import android.support.annotation.NonNull;
 import android.util.Log;
 
+import com.github.pires.obd.reader.activity.ConfigActivity;
 import com.github.pires.obd.reader.activity.MainActivity;
 
 import java.io.InputStream;
@@ -18,6 +19,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.regex.Matcher;
@@ -37,17 +39,18 @@ public class writerThread extends Thread {
     private OutputStream elmOutputStream;
     private Context ctxUi;
     private final BlockingQueue<ArrayList<can_data>> myQ;
-    private String hexID;
+//    private String hexID;
     private String vehicleID;
     private String userName;
     private int blockSize = 256;
     private  ObdGatewayService myService;
-    private Long timeStamp;
-    private Long threadStartTimeStamp;
+//    private Long timeStamp;
+//    private Long threadStartTimeStamp;
     private ArrayList<Integer> IDArray;
     private int ourByteLength = 16;
     private int messageLengthWithID = 19;
     private int indexKey;
+    private int numOfBytes;
 //    private int numberOfMessages = 0;
 //    private int numberOfBufferFullErrors = 0;
 
@@ -57,7 +60,8 @@ public class writerThread extends Thread {
                         String incomingUserName,
                         ObdGatewayService incomingService,
                         ArrayList<Integer> incomingIDArr,
-                        int incomingIndexKey)
+                        int incomingIndexKey,
+                        int incomingNumOfBytes)
     {
 
         elmInputStream = elmInput;
@@ -70,8 +74,9 @@ public class writerThread extends Thread {
         userName = incomingUserName;
         myService = incomingService;
 
-//        IDArray = incomingIDArr;
+        IDArray = incomingIDArr;
         indexKey = incomingIndexKey;
+        numOfBytes = incomingNumOfBytes;
 
 //        hdForUi = hd;
     }
@@ -109,12 +114,14 @@ public class writerThread extends Thread {
                 //read from Elm
                 ArrayList<can_data> canDataLs = new ArrayList<can_data>();
 
-                String[] curCanData = new String[blockSize];
+//                byte[][] curCanData = new byte[blockSize][];
+                List<byte[]> curCanData = new ArrayList<>();
+
                 loopStartTimeStamp = System.currentTimeMillis();
                 Long a = System.nanoTime();
                 for( int i=0; i<blockSize; i++){
 
-                    curCanData[i] = readDataFromElm();
+                    curCanData.add( readDataFromElm() );
                     final int iteratorI= i;
                     ((MainActivity) ctxUi).runOnUiThread(new Runnable() {
                         @Override
@@ -122,9 +129,10 @@ public class writerThread extends Thread {
                             ((MainActivity) ctxUi).canBUSUpdate(elmDeviceStatus, elmDeviceStatus, "Block For Loop at " + Integer.toString(iteratorI) );
                         }
                     });
-//                    long t2 = System.nanoTime();
-                    if (curCanData[i].equals("Exception Occured") || curCanData[i].equals(""))
+                    if (curCanData.get(i) == null) {
+                        Log.d(TAG, "Exited the inner data collector for loop");
                         break;
+                    }
 
                 }
 
@@ -137,12 +145,12 @@ public class writerThread extends Thread {
 
 
                 Long b = System.nanoTime();
-                long avgTimeMillis = (b-a)/(blockSize*1000000);
+                long avgTimeMillis = (b-a)/(curCanData.size()*1000000);
 //                getCurrentLocation();
-                for (int i=0; i<blockSize; i++) {
+                for (int i=0; i<curCanData.size(); i++) {
                     can_data curData = new can_data(); // us-east-1:0d327241-156d-45e2-9560-4ce6c9192613
                     curData.setTimeStamp(loopStartTimeStamp+i*avgTimeMillis);
-                    curData.setData(hexStringToByteArray(curCanData[i]));
+                    curData.setData(curCanData.get(i));
 //                    curData.setCanID(hexID);
                     curData.setVIN(vehicleID);
 //                    curData.setCanIDMeaning("Still Hard Coded");
@@ -184,11 +192,12 @@ public class writerThread extends Thread {
 
 
     @NonNull
-    private String readDataFromElm() {
+    private byte[] readDataFromElm() {
         StringBuilder res = new StringBuilder();
         byte b = 0;
         char c;
-        String temp;
+        byte[] elmDataReady = new byte[ numOfBytes ];
+//        String temp;
 //        boolean bufferFullHit = false;
 
         HashMap<Integer, String> IdDataMap = new HashMap<Integer, String>();
@@ -217,7 +226,7 @@ public class writerThread extends Thread {
 //                        ((MainActivity) ctxUi).canBUSUpdate(elmDeviceStatus, elmDeviceStatus, "Read Success" );
 //                    }
 //                });
-                return "Exception Occured";
+                return null;
             }
             c = (char) b;
             if (c == '>' || c == '<' || c == '\r') // read until '>' arrives
@@ -252,10 +261,10 @@ public class writerThread extends Thread {
                                 ((MainActivity) ctxUi).runOnUiThread(new Runnable() {
                                     @Override
                                     public void run() {
-                                        ((MainActivity) ctxUi).incrementRowVal("properBlock", " # Proper Blocks Received: ", "1");
+                                        ((MainActivity) ctxUi).incrementRowVal("properBlock", " # Proper Blocks Received from ELM ", "1");
                                     }
                                 });
-                                return concatByteData(IdDataMap);
+                                return concatByteData(IdDataMap, elmDataReady);
                             } //else {
 //                                ((MainActivity) ctxUi).runOnUiThread(new Runnable() {
 //                                    @Override
@@ -292,7 +301,7 @@ public class writerThread extends Thread {
             }
             res.append(c);
         }
-        return "";
+        return null;
 
     }
 
@@ -311,27 +320,27 @@ public class writerThread extends Thread {
 //        return IDArray.equals(curSessionIDArr);
     }
 
-    private ArrayList<Integer> extractIDs(String byteData, HashMap<Integer, String> IdDataMap) {
+//    private ArrayList<Integer> extractIDs(String byteData, HashMap<Integer, String> IdDataMap) {
+//
+//        ArrayList<Integer> idArr = new ArrayList<Integer>();
+//
+//        int curMsgID = Integer.parseInt(byteData.substring(0,3),16);
+//        String byteDataNoId = byteData.replace(byteData.substring(0,3), "");
+//
+//        if(byteDataNoId.length() == ourByteLength) {
+//            IdDataMap.put(curMsgID, byteDataNoId);
+//        } else {
+//            Log.d(TAG, "wrong byte length");
+//        }
+//
+//        Set<Integer> mySet = IdDataMap.keySet();
+//        idArr.addAll(mySet);
+//        Collections.sort(idArr);
+//        return idArr;
+//
+//    }
 
-        ArrayList<Integer> idArr = new ArrayList<Integer>();
-
-        int curMsgID = Integer.parseInt(byteData.substring(0,3),16);
-        String byteDataNoId = byteData.replace(byteData.substring(0,3), "");
-
-        if(byteDataNoId.length() == ourByteLength) {
-            IdDataMap.put(curMsgID, byteDataNoId);
-        } else {
-            Log.d(TAG, "wrong byte length");
-        }
-
-        Set<Integer> mySet = IdDataMap.keySet();
-        idArr.addAll(mySet);
-        Collections.sort(idArr);
-        return idArr;
-
-    }
-
-    private String concatByteData(HashMap<Integer, String> IdDataMap) {
+    private byte[] concatByteData(HashMap<Integer, String> IdDataMap, byte[] elmDataReady) {
 
         //TODO: this needs to be done the way Greg describes in his email. 32element array each 8 byte goes to a specific position
 //        for(i=0;i<8;i++)
@@ -339,29 +348,26 @@ public class writerThread extends Thread {
 //            data[i+(CANID&Index)*8] = MSG[i];
 //        }
 
-        StringBuilder byteBlock = new StringBuilder();
+//        StringBuilder byteBlock = new StringBuilder();
         ArrayList<Integer> idArr = new ArrayList<Integer>();
         Set<Integer> mySet = IdDataMap.keySet();
         idArr.addAll(mySet);
         Collections.sort(idArr);
         for(Integer curKey: idArr) {
-            byteBlock.append(IdDataMap.get(curKey));
+            int pos = IDArray.indexOf(curKey);
+            if (pos>-1)
+                System.arraycopy(hexStringToByteArray(IdDataMap.get(curKey)), 0,elmDataReady , pos * ( IdDataMap.get(curKey).length() /2 ), IdDataMap.get(curKey).length()/2);
+
+//            String curHexArr = IdDataMap.get(curKey);
+//            elmDataReady[pos*8:pos*8+7] = hexStringToByteArray(IdDataMap.get(curKey));
+//            byteBlock.append();
         }
-        return byteBlock.toString();
+        return elmDataReady; //byteBlock.toString();
     }
 
     private void writeToReaderThread(ArrayList<can_data> canDataLs) {
-        //write to the other thread
-//        CanMessage.canMessage.Builder  curCanMsg = CanMessage.canMessage.newBuilder();
-//        curCanMsg.setCanData(curCanData);
-//        curCanMsg.setTimestamp(System.currentTimeMillis());
         try {
-//            Long a = System.currentTimeMillis();
             myQ.put(canDataLs);
-//            curCanMsg.build().writeDelimitedTo(_os);
-//            Long b = System.currentTimeMillis();
-//            Log.d(TAG, "Time it took to write into the Reader Pipe: " + Long.toString(b-a) + " [ms]");
-//            System.out.println("[COMPLETED] WriterThread submitted: " + curCanData);
         } catch (Exception e) {
             e.printStackTrace();
         }

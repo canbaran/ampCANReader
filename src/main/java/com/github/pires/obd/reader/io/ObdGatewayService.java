@@ -98,6 +98,7 @@ public class ObdGatewayService extends AbstractGatewayService {
     private int indexKey;
     private String CM = "";
     private String CF = "";
+    private String CMEnum = "";
     //
     DynamoDBMapper mapper;
 
@@ -107,12 +108,11 @@ public class ObdGatewayService extends AbstractGatewayService {
 
     public void startService() throws IOException {
         Log.d(TAG, "Starting service..");
-        String CMEnum;
         CF = prefs.getString(ConfigActivity.CF_hex, "7ff");
         ((MainActivity) ctx).runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                ((MainActivity) ctx).canBUSUpdate("BaseCanID", "Base Can ID:",
+                ((MainActivity) ctx).canBUSUpdate("BaseCanID", "Base Can ID",
                         CF + " (CF" + CF +")");
             }
         });
@@ -146,7 +146,7 @@ public class ObdGatewayService extends AbstractGatewayService {
         ((MainActivity) ctx).runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                ((MainActivity) ctx).canBUSUpdate("NumberOfMsgs", "Number of Msgs:", CMEnum2 + "(CM" + CM + ")");
+                ((MainActivity) ctx).canBUSUpdate("NumberOfMsgs", "Number of Msgs", CMEnum2 + "(CM" + CM + ")");
             }
         });
 
@@ -257,8 +257,6 @@ public class ObdGatewayService extends AbstractGatewayService {
         queueJob(new ObdCommandJob(new EchoOffCommand()));
         queueJob(new ObdCommandJob(new HeaderOnCommand()));
         queueJob(new ObdCommandJob(new FilterCan("CF", CF)));
-
-
         queueJob(new ObdCommandJob(new FilterCan("CM", CM)));
 
 
@@ -269,19 +267,7 @@ public class ObdGatewayService extends AbstractGatewayService {
 
 
     }
-//    private void writeToReaderThread(String curCanData, PipedOutputStream os) {
-//        //write to the other thread
-//        CanMessage.canMessage.Builder  curCanMsg = CanMessage.canMessage.newBuilder();
-//        curCanMsg.setCanData(curCanData);
-//        curCanMsg.setTimestamp(System.currentTimeMillis());
-//        try {
-//            curCanMsg.build();
-//            curCanMsg.build().writeDelimitedTo(os);
-//            System.out.println("[COMPLETED] WriterThread submitted: " + curCanData + " at " + Long.toString(System.currentTimeMillis()));
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//        }
-//    }
+
 
     public void setBatchCount(int number) {
         this.transmittedBatchCount = number;
@@ -352,27 +338,28 @@ public class ObdGatewayService extends AbstractGatewayService {
                                 prefs.getString(ConfigActivity.userName, ""),
                                 this,
                                 IDArr,
-                                indexKey);
+                                indexKey,
+                                Integer.parseInt(CMEnum)*8);
                         writerThread.setName("Writer Thread");
 
 
 
-                        ((MainActivity) ctx).runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                ((MainActivity) ctx).canBUSUpdate( awsUploadStatus,  awsUploadStatus,  "Uploader Threads are started");
-                            }
-                        });
+//                        ((MainActivity) ctx).runOnUiThread(new Runnable() {
+//                            @Override
+//                            public void run() {
+//                                ((MainActivity) ctx).canBUSUpdate( awsUploadStatus,  awsUploadStatus,  "Uploader Threads are started");
+//                            }
+//                        });
                         for (int i=0; i<tLS.size(); i++) {
                             tLS.get(i).start();
                         }
 
-                        ((MainActivity) ctx).runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                ((MainActivity) ctx).canBUSUpdate( elmDeviceStatus,  elmDeviceStatus,  "About to Connect to Elm");
-                            }
-                        });
+//                        ((MainActivity) ctx).runOnUiThread(new Runnable() {
+//                            @Override
+//                            public void run() {
+//                                ((MainActivity) ctx).canBUSUpdate( elmDeviceStatus,  elmDeviceStatus,  "About to Connect to Elm");
+//                            }
+//                        });
                         writerThread.start();
 
                         for (int i=0; i<tLS.size(); i++) {
@@ -416,8 +403,20 @@ public class ObdGatewayService extends AbstractGatewayService {
     }
 
     private void createIDArr() {
+        //silver jag
+//        0f9
+//        079
+//        179
+//        299
+//        IDArr.add(0x0f9);
+//        IDArr.add(0x079);
+//        IDArr.add(0x179);
+//        IDArr.add(0x299);
+//        indexKey = Collections.max(IDArr);
+
+
+        //real code
         String CF = prefs.getString(ConfigActivity.CF_hex, "7ff");
-//        String CM = prefs.getString(ConfigActivity.CM_hex, "7ff");
         int CFHex = Integer.parseInt(CF, 16);
         int CMHex = Integer.parseInt(CM, 16);
         int index = 0x7ff-CMHex;
@@ -425,10 +424,8 @@ public class ObdGatewayService extends AbstractGatewayService {
             IDArr.add(CFHex+i);
         }
         indexKey = Collections.max(IDArr);
-        Log.d(TAG,  "index KEY: " + Integer.toString(indexKey));
-//        IDArr.add(0x159);
-//        IDArr.add(0x179);
-//        IDArr.add(0x199);
+
+
     }
 
     /**
