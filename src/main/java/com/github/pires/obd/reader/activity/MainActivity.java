@@ -603,6 +603,40 @@ final String devemail = prefs.getString(ConfigActivity.DEV_EMAIL_KEY,null);
         TextView value = new TextView(this);
 
         value.setGravity(Gravity.LEFT);
+        switch (key) {
+            case "500":
+                //ddsddsddsddsddsdddsdsdd
+                val = val.substring(0,2)+" "+
+                        val.substring(2,4) + " "+
+                        val.substring(4,6) + " " +
+                        val.substring(6,8) + " " +
+                        val.substring(8,10) + " " +
+                        val.substring(10,13) + " " +
+                        val.substring(13,14) + " " +
+                        val.substring(14,16);
+                break;
+            case "501":
+                //dddsdddsdddsdddsdddsd
+                val = val.substring(0,3)+ " "+
+                        val.substring(3,6) + " " +
+                        val.substring(6,9) + " " +
+                        val.substring(9,12) + " " +
+                        val.substring(12,15) + " " +
+                        val.substring(15,16);
+                break;
+            case "503":
+                //dddsdddsdddsdsddsddsdd
+                val = val.substring(0,3)+ " "+
+                        val.substring(3,6) + " " +
+                        val.substring(6,9) + " " +
+                        val.substring(9,10) + " " +
+                        val.substring(10,12) + " " +
+                        val.substring(12,14) + " " +
+                        val.substring(14,16);
+                break;
+            default:
+                break;
+        }
         value.setText(val);
         value.setTag(id);
         value.setTextSize(TypedValue.COMPLEX_UNIT_PX, 20);
