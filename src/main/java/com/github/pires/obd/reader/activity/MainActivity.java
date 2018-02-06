@@ -604,15 +604,16 @@ final String devemail = prefs.getString(ConfigActivity.DEV_EMAIL_KEY,null);
 
         value.setGravity(Gravity.LEFT);
         switch (key) {
-            case "500":
+            case "179":
+//                temp= va;
                 //ddsddsddsddsddsdddsdsdd
-                val = val.substring(0,2)+" "+
-                        val.substring(2,4) + " "+
-                        val.substring(4,6) + " " +
-                        val.substring(6,8) + " " +
-                        val.substring(8,10) + " " +
-                        val.substring(10,13) + " " +
-                        val.substring(13,14) + " " +
+                val = val.substring(0,2)+"&"+
+                        val.substring(2,4) + "&"+
+                        val.substring(4,6) + "&" +
+                        val.substring(6,8) + "&" +
+                        val.substring(8,10) + "&" +
+                        val.substring(10,13) + "&" +
+                        val.substring(13,14) + "&" +
                         val.substring(14,16);
                 break;
             case "501":

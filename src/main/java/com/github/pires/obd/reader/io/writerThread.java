@@ -115,13 +115,17 @@ public class writerThread extends Thread {
                 ArrayList<can_data> canDataLs = new ArrayList<can_data>();
 
 //                byte[][] curCanData = new byte[blockSize][];
-                List<byte[]> curCanData = new ArrayList<>();
+//                List<byte[]> curCanData = new ArrayList<>();
 
                 loopStartTimeStamp = System.currentTimeMillis();
                 Long a = System.nanoTime();
                 for( int i=0; i<blockSize; i++){
-
-                    curCanData.add( readDataFromElm() );
+                    can_data curData = readDataFromElm();
+                    if (curData == null) {
+                        Log.d(TAG, "Exited the inner data collector for loop");
+                        break;
+                    }
+                    canDataLs.add(curData);
                     final int iteratorI= i;
                     ((MainActivity) ctxUi).runOnUiThread(new Runnable() {
                         @Override
@@ -129,36 +133,15 @@ public class writerThread extends Thread {
                             ((MainActivity) ctxUi).canBUSUpdate(elmDeviceStatus, elmDeviceStatus, "Block For Loop at " + Integer.toString(iteratorI) );
                         }
                     });
-                    if (curCanData.get(i) == null) {
-                        Log.d(TAG, "Exited the inner data collector for loop");
-                        break;
-                    }
-
                 }
-
-//                ((MainActivity) ctxUi).runOnUiThread(new Runnable() {
-//                    @Override
-//                    public void run() {
-//                        ((MainActivity) ctxUi).canBUSUpdate("SUpdate8", "Status Update8", "Block For loop Finished ");
-//                    }
-//                });
-
-
                 Long b = System.nanoTime();
-                long avgTimeMillis = (b-a)/(curCanData.size()*1000000);
-//                getCurrentLocation();
-                for (int i=0; i<curCanData.size(); i++) {
-                    can_data curData = new can_data(); // us-east-1:0d327241-156d-45e2-9560-4ce6c9192613
+                long avgTimeMillis = (b-a)/(canDataLs.size()*1000000);
+                for (int i=0; i<canDataLs.size(); i++) {
+                    can_data curData = canDataLs.get(i);
                     curData.setTimeStamp(loopStartTimeStamp+i*avgTimeMillis);
-                    curData.setData(curCanData.get(i));
-//                    curData.setCanID(hexID);
                     curData.setVIN(vehicleID);
-//                    curData.setCanIDMeaning("Still Hard Coded");
-//                    curData.setGPS("MY GPS");
-//                    curData.setLat(curLat);
-//                    curData.setLong(curLong);
+                    canDataLs.remove(i);
                     canDataLs.add(curData);
-
                 }
                 Log.d(TAG, Integer.toString(blockSize) + " points produced: " + Long.toString( (b-a) / (blockSize*1000000) ) + " [ms] per point" );
 //                ((MainActivity) ctxUi).runOnUiThread(new Runnable() {
@@ -192,7 +175,7 @@ public class writerThread extends Thread {
 
 
     @NonNull
-    private byte[] readDataFromElm() {
+    private can_data readDataFromElm() {
         StringBuilder res = new StringBuilder();
         byte b = 0;
         char c;
@@ -233,7 +216,7 @@ public class writerThread extends Thread {
             {
 //                if (!res.toString().equals("DATA ERROR")) {
                 final String byteData = res.toString().replaceAll("(\n" +
-                        "|\r" + "|<" + "|\\bAT\\s?MA\\b" + "|\\s+" +
+                        "|\r" + "|<" + "|\\bAT\\s?MA\\b" + "|\\s+" + "|>"+
                         "|\\bDATA\\s?ERROR\\b)", "");
                 try {
                     if ( byteData.equals("BUFFERFULL") ) {
@@ -251,12 +234,7 @@ public class writerThread extends Thread {
                         Matcher m = p.matcher(byteData);
                         if (byteData.length() == messageLengthWithID && m.find()) {
 
-                            ((MainActivity) ctxUi).runOnUiThread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    ((MainActivity) ctxUi).canBUSUpdate(byteData.substring(0,3), byteData.substring(0,3), byteData.substring(3));
-                                }
-                            });
+
                             if (didGrabAllMsgs(byteData, IdDataMap)) {
                                 ((MainActivity) ctxUi).runOnUiThread(new Runnable() {
                                     @Override
@@ -264,7 +242,7 @@ public class writerThread extends Thread {
                                         ((MainActivity) ctxUi).incrementRowVal("properBlock", " # Proper Blocks Received from ELM ", "1");
                                     }
                                 });
-                                return concatByteData(IdDataMap, elmDataReady);
+                                return decodeHexData(IdDataMap, elmDataReady);
                             } //else {
 //                                ((MainActivity) ctxUi).runOnUiThread(new Runnable() {
 //                                    @Override
@@ -340,29 +318,148 @@ public class writerThread extends Thread {
 //
 //    }
 
-    private byte[] concatByteData(HashMap<Integer, String> IdDataMap, byte[] elmDataReady) {
+    private can_data decodeHexData(HashMap<Integer, String> IdDataMap, byte[] elmDataReady) {
 
-        //TODO: this needs to be done the way Greg describes in his email. 32element array each 8 byte goes to a specific position
-//        for(i=0;i<8;i++)
-//        {
-//            data[i+(CANID&Index)*8] = MSG[i];
-//        }
 
-//        StringBuilder byteBlock = new StringBuilder();
+        can_data decodedCanData = new can_data();
         ArrayList<Integer> idArr = new ArrayList<Integer>();
         Set<Integer> mySet = IdDataMap.keySet();
         idArr.addAll(mySet);
         Collections.sort(idArr);
+//        HashMap<String, Object> decodedDataMap = new HashMap<String, Object>();
         for(Integer curKey: idArr) {
-            int pos = IDArray.indexOf(curKey);
-            if (pos>-1)
-                System.arraycopy(hexStringToByteArray(IdDataMap.get(curKey)), 0,elmDataReady , pos * ( IdDataMap.get(curKey).length() /2 ), IdDataMap.get(curKey).length()/2);
+            String curVal= IdDataMap.get(curKey);
+            String  zerothByte = curVal.substring(0,2);
+            String firstByte = curVal.substring(2,4);
+            String secondByte = curVal.substring(4,6);
+            String thirdByte = curVal.substring(6,8);
+            String fourthByte = curVal.substring(8,10);
+            String fifthByte = curVal.substring(10,12);
+            String sixthByte = curVal.substring(12,14);
+            String seventhByte = curVal.substring(14,16);
+
+            switch (curKey) {
+                case 0x500:
+//                    500:
+//                    0: LQ (upper 4 bits represents left lane, lower 4 bits is right lane.. not used in Toyota)
+//                    1: Trim (Should never really go beyond +/- 20 or so) trim for dead center on steering
+//                    2: LLD (Left lane distance 0-50ish 255 if not present. Low 30s is usually center. 15-16 is edge.)
+//                    3: RLD (Right lane distance 0-50ish 255 if not present. Low 30s is usually center, 15-16 is edge.)
+//                    4: XD (lateral motion, +-1, 2, 3 is moderate motion, +/-10, 11, 12 is aggressive, 18+ crazy)
+//                    5: Curve (upper 8 bits)
+//                    6: Curve (lower 4 bits at top) (0x08, 0x04 2 bits turn signal, 0x02 enabled, 0x01 lanes present)
+//                    7: speed mph
+//                    Python Code
+//                    LLQ = int(zerothByte[0],16)
+//                    RLQ = int(zerothByte[1],16)
+//                    trim = sxtn( int(firstByte, 16), len(firstByte)*4)
+//                    LLD = int(secondByte, 16)
+//                    RLD = int(thirdByte, 16)
+//                    xD = sxtn( int(fourthByte, 16), len(fourthByte)*4)
+//                    curve = sxtn( int(fifthByte+sixthByte[0], 16), len(fifthByte+sixthByte[0])*4)
+//                    speed = int(seventhByte, 16)
+                    int LLQ = Integer.parseInt( zerothByte.substring(0,1), 16);
+                    decodedCanData.setLLQ(LLQ);
+                    displayOnUi("LLQ", Integer.toString(LLQ));
+                    int RLQ = Integer.parseInt( zerothByte.substring(1,2), 16);
+                    decodedCanData.setRLQ(RLQ);
+                    displayOnUi("RLQ", Integer.toString(RLQ));
+                    int trim = signConversion( Integer.parseInt( firstByte, 16), firstByte.length()*4);
+                    decodedCanData.setTrim(trim);
+                    displayOnUi("trim", Integer.toString(trim));
+                    int LLD = Integer.parseInt( secondByte, 16);
+                    decodedCanData.setLLD(LLD);
+                    displayOnUi("LLD", Integer.toString(LLD));
+                    int RLD = Integer.parseInt( thirdByte, 16);
+                    decodedCanData.setRLD(RLD);
+                    displayOnUi("RLD", Integer.toString(RLD));
+                    int XD = signConversion(Integer.parseInt( fourthByte, 16), fourthByte.length()*4);
+                    decodedCanData.setXD(XD);
+                    displayOnUi("XD", Integer.toString(XD));
+                    int curve = signConversion(Integer.parseInt( fifthByte+sixthByte.substring(0,1), 16), (fifthByte+sixthByte.substring(0,1)).length()*4);
+                    decodedCanData.setCurve(curve);
+                    displayOnUi("curve", Integer.toString(curve));
+                    int speed = Integer.parseInt( seventhByte, 16);
+                    decodedCanData.setSpeed(speed);
+                    displayOnUi("speed", Integer.toString(speed));
+                    break;
+                case 0x501:
+//                    501:
+//                    0: Tangle (Target angle upper 8)
+//                    1: Tangle (lower 4 at top), steering angle (upper 4 at bottom)
+//                    2: steering angle (lower 8)
+//                    3: steering rate*kd (upper 8)
+//                    4: steering rate*kd (lower 4 at top), angle_int/ki (upper 4 at bottom)
+//                    5: angle_int/ki (lower 8)
+//                    6: error (Tangle-steering angle)*kp (upper 8)
+//                    7: error (lower 4 at top) + 0x08 backoff on.
+//                    python code
+//                    tAngle = sxtn( int(zerothByte+firstByte[0], 16), len(zerothByte+firstByte[0])*4)
+//                    sAngle = sxtn( int(firstByte[1]+secondByte, 16), len(firstByte[1]+secondByte)*4)
+//                    sRate = sxtn( int(thirdByte+fourthByte[0], 16), len(thirdByte+fourthByte[0])*4)
+//                    tErrorIntegral = sxtn( int(fourthByte[1]+fifthByte, 16), len(fourthByte[1]+fifthByte)*4)
+//                    tError = sxtn( int(sixthByte+seventhByte[0], 16), len(sixthByte+seventhByte[0])*4)
+//                    backOff = int(seventhByte[1],16) & 0x0C
+                    int tangle = signConversion( Integer.parseInt( zerothByte+firstByte.substring(0,1), 16), (zerothByte+firstByte.substring(0,1)).length()*4) ;
+                    decodedCanData.setTAngle(tangle);
+                    displayOnUi("tAngle", Integer.toString(tangle));
+
+                    int sAngle = signConversion( Integer.parseInt( firstByte.substring(1,2)+secondByte, 16), (firstByte.substring(1,2)+secondByte).length()*4) ;
+                    decodedCanData.setSAngle(sAngle);
+                    displayOnUi("sAngle", Integer.toString(sAngle));
+
+                    int sRate = signConversion( Integer.parseInt( thirdByte + fourthByte.substring(0,1), 16), (thirdByte + fourthByte.substring(0,1)).length()*4);
+                    decodedCanData.setSRate(sRate);
+                    displayOnUi("sRate", Integer.toString(sRate));
+
+                    int tErrorIntegral = signConversion( Integer.parseInt( fourthByte.substring(1,2)+fifthByte, 16), (fourthByte.substring(1,2)+fifthByte).length()*4);
+                    decodedCanData.setTErrorIntegral(tErrorIntegral);
+                    displayOnUi("tErrorIntegral", Integer.toString(tErrorIntegral));
+
+                    int tError = signConversion( Integer.parseInt(sixthByte+seventhByte.substring(0,1), 16), (sixthByte+seventhByte.substring(0,1)).length()*4);
+                    decodedCanData.setTError(tError);
+                    displayOnUi("tError", Integer.toString(tError));
+
+                    break;
+                case 0x503:
+//                    0: Commandtorque (upper 8)
+//                    1: Commandtorque (lower 4 at top), user torque (upper 8 at bottom)
+//                    2: user torque (lower 8)
+//                    3: total torque (upper 8)
+//                    4: total torque (lower 4 at top) + EPS status (TBD bottom)
+//                    5: future radar distance
+//                    6: future radar azimuth
+//                    7: VERSION (upper 3 bits vehicle, lower 5 version)
+//                    Python Code
+//                    cmdTorque = sxtn( int(zerothByte+firstByte[0], 16), len(zerothByte+firstByte[0])*4)
+//                    userTorque = sxtn( int(firstByte[1]+secondByte, 16), len(firstByte[1]+secondByte)*4)
+//                    totalTorque = sxtn( int(thirdByte+fourthByte[0], 16), len(thirdByte+fourthByte[0])*4)
+                    int commandTorque = signConversion( Integer.parseInt( zerothByte + firstByte.substring(0,1), 16), (zerothByte + firstByte.substring(0,1)).length()*4);
+                    decodedCanData.setCommandTorque(commandTorque);
+                    displayOnUi("commandTorque", Integer.toString(commandTorque));
+
+                    int userTorque =  signConversion( Integer.parseInt( firstByte.substring(1,2) + secondByte, 16), (firstByte.substring(1,2) + secondByte).length()*4);
+                    decodedCanData.setUserTorque(userTorque);
+                    displayOnUi("userTorque", Integer.toString(userTorque));
+
+                    int totalTorque = signConversion( Integer.parseInt(thirdByte+fourthByte.substring(0,1), 16),(thirdByte+fourthByte.substring(0,1)).length()*4 );
+                    decodedCanData.setTotalTorque(totalTorque);
+                    displayOnUi("totalTorque", Integer.toString(totalTorque));
+
+                    break;
+                default:
+                    break;
+            }
+//            String curHex = IdDataMap.get(curKey)
+//            int pos = IDArray.indexOf(curKey);
+//            if (pos>-1)
+//                System.arraycopy(hexStringToByteArray(IdDataMap.get(curKey)), 0,elmDataReady , pos * ( IdDataMap.get(curKey).length() /2 ), IdDataMap.get(curKey).length()/2);
 
 //            String curHexArr = IdDataMap.get(curKey);
 //            elmDataReady[pos*8:pos*8+7] = hexStringToByteArray(IdDataMap.get(curKey));
 //            byteBlock.append();
         }
-        return elmDataReady; //byteBlock.toString();
+        return decodedCanData; //byteBlock.toString();
     }
 
     private void writeToReaderThread(ArrayList<can_data> canDataLs) {
@@ -371,5 +468,19 @@ public class writerThread extends Thread {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    private void displayOnUi(final String variableName, final String variableValue) {
+        ((MainActivity) ctxUi).runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    ((MainActivity) ctxUi).canBUSUpdate(variableName, variableName, variableValue);
+                                }
+        });
+    }
+    private int signConversion(int x, int bits) {
+        int h = 1 << (bits - 1);
+        int m = (1 << bits) - 1;
+        return ((x + h) & m) - h;
     }
 }
