@@ -8,6 +8,7 @@ import android.os.SystemClock;
 import android.support.annotation.NonNull;
 import android.util.Log;
 
+import com.github.pires.obd.reader.R;
 import com.github.pires.obd.reader.activity.ConfigActivity;
 import com.github.pires.obd.reader.activity.MainActivity;
 
@@ -15,9 +16,11 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PipedOutputStream;
 import java.lang.reflect.Array;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
@@ -25,7 +28,7 @@ import java.util.concurrent.BlockingQueue;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import amp.internal.io.CanMessage;
+//import amp.internal.io.CanMessage;
 
 import static android.content.ContentValues.TAG;
 import static com.github.pires.obd.reader.io.uiNotificationIds.elmDeviceStatus;
@@ -138,10 +141,13 @@ public class writerThread extends Thread {
                 long avgTimeMillis = (b-a)/(canDataLs.size()*1000000);
                 for (int i=0; i<canDataLs.size(); i++) {
                     can_data curData = canDataLs.get(i);
-                    curData.setTimeStamp(loopStartTimeStamp+i*avgTimeMillis);
+                    Long curTimeStamp = loopStartTimeStamp+i*avgTimeMillis;
+
+                    curData.setTimeStamp(curTimeStamp);
+//                    displayEverything(curData);
                     curData.setVIN(vehicleID);
-                    canDataLs.remove(i);
-                    canDataLs.add(curData);
+//                    canDataLs.remove(i);
+//                    canDataLs.add(curData);
                 }
                 Log.d(TAG, Integer.toString(blockSize) + " points produced: " + Long.toString( (b-a) / (blockSize*1000000) ) + " [ms] per point" );
 //                ((MainActivity) ctxUi).runOnUiThread(new Runnable() {
@@ -318,6 +324,21 @@ public class writerThread extends Thread {
 //
 //    }
 
+    private void displayEverything(final can_data curCanData) {
+        Log.d(TAG, "displaying Data on UI Thread");
+
+        ((MainActivity) ctxUi).runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                ((MainActivity) ctxUi).canBUSUpdateCanData(curCanData);
+            }
+        });
+
+
+
+
+    }
+
     private can_data decodeHexData(HashMap<Integer, String> IdDataMap, byte[] elmDataReady) {
 
 
@@ -328,6 +349,12 @@ public class writerThread extends Thread {
         Collections.sort(idArr);
 //        HashMap<String, Object> decodedDataMap = new HashMap<String, Object>();
         for(Integer curKey: idArr) {
+            Long curTimeStamp = System.currentTimeMillis();
+            Date curDate = new Date(curTimeStamp);
+            SimpleDateFormat sdfDate = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
+            String strDate = sdfDate.format(curDate);
+            displayOnUi("Timestamp",strDate );
+
             String curVal= IdDataMap.get(curKey);
             String  zerothByte = curVal.substring(0,2);
             String firstByte = curVal.substring(2,4);
@@ -360,28 +387,31 @@ public class writerThread extends Thread {
 //                    speed = int(seventhByte, 16)
                     int LLQ = Integer.parseInt( zerothByte.substring(0,1), 16);
                     decodedCanData.setLLQ(LLQ);
-                    displayOnUi("LLQ", Integer.toString(LLQ));
                     int RLQ = Integer.parseInt( zerothByte.substring(1,2), 16);
                     decodedCanData.setRLQ(RLQ);
-                    displayOnUi("RLQ", Integer.toString(RLQ));
                     int trim = signConversion( Integer.parseInt( firstByte, 16), firstByte.length()*4);
                     decodedCanData.setTrim(trim);
-                    displayOnUi("trim", Integer.toString(trim));
                     int LLD = Integer.parseInt( secondByte, 16);
                     decodedCanData.setLLD(LLD);
-                    displayOnUi("LLD", Integer.toString(LLD));
                     int RLD = Integer.parseInt( thirdByte, 16);
                     decodedCanData.setRLD(RLD);
-                    displayOnUi("RLD", Integer.toString(RLD));
                     int XD = signConversion(Integer.parseInt( fourthByte, 16), fourthByte.length()*4);
                     decodedCanData.setXD(XD);
-                    displayOnUi("XD", Integer.toString(XD));
                     int curve = signConversion(Integer.parseInt( fifthByte+sixthByte.substring(0,1), 16), (fifthByte+sixthByte.substring(0,1)).length()*4);
                     decodedCanData.setCurve(curve);
-                    displayOnUi("curve", Integer.toString(curve));
                     int speed = Integer.parseInt( seventhByte, 16);
                     decodedCanData.setSpeed(speed);
-                    displayOnUi("speed", Integer.toString(speed));
+
+                    displayOnUi("LLQ",  Integer.toString(decodedCanData.getLLQ()));
+                    displayOnUi("RLQ", Integer.toString( decodedCanData.getRLQ()));
+                    displayOnUi("trim", Integer.toString(decodedCanData.getTrim()));
+                    displayOnUi("LLD", Integer.toString(decodedCanData.getLLD()));
+                    displayOnUi("RLD", Integer.toString(decodedCanData.getRLD()));
+                    displayOnUi("XD", Integer.toString(decodedCanData.getXD()));
+                    displayOnUi("curve", Integer.toString(decodedCanData.getCurve()));
+                    displayOnUi("speed", Integer.toString(decodedCanData.getSpeed()));
+
+
                     break;
                 case 0x501:
 //                    501:
@@ -402,23 +432,26 @@ public class writerThread extends Thread {
 //                    backOff = int(seventhByte[1],16) & 0x0C
                     int tangle = signConversion( Integer.parseInt( zerothByte+firstByte.substring(0,1), 16), (zerothByte+firstByte.substring(0,1)).length()*4) ;
                     decodedCanData.setTAngle(tangle);
-                    displayOnUi("tAngle", Integer.toString(tangle));
 
                     int sAngle = signConversion( Integer.parseInt( firstByte.substring(1,2)+secondByte, 16), (firstByte.substring(1,2)+secondByte).length()*4) ;
                     decodedCanData.setSAngle(sAngle);
-                    displayOnUi("sAngle", Integer.toString(sAngle));
 
                     int sRate = signConversion( Integer.parseInt( thirdByte + fourthByte.substring(0,1), 16), (thirdByte + fourthByte.substring(0,1)).length()*4);
                     decodedCanData.setSRate(sRate);
-                    displayOnUi("sRate", Integer.toString(sRate));
+
 
                     int tErrorIntegral = signConversion( Integer.parseInt( fourthByte.substring(1,2)+fifthByte, 16), (fourthByte.substring(1,2)+fifthByte).length()*4);
                     decodedCanData.setTErrorIntegral(tErrorIntegral);
-                    displayOnUi("tErrorIntegral", Integer.toString(tErrorIntegral));
 
                     int tError = signConversion( Integer.parseInt(sixthByte+seventhByte.substring(0,1), 16), (sixthByte+seventhByte.substring(0,1)).length()*4);
                     decodedCanData.setTError(tError);
-                    displayOnUi("tError", Integer.toString(tError));
+
+                    displayOnUi("tAngle", Integer.toString(decodedCanData.getTAngle()));
+                    displayOnUi("sAngle", Integer.toString(decodedCanData.getSAngle()));
+                    displayOnUi("sRate", Integer.toString(decodedCanData.getSRate()));
+                    displayOnUi("tErrorIntegral", Integer.toString(decodedCanData.getTErrorIntegral()));
+                    displayOnUi("tError", Integer.toString(decodedCanData.getTError()));
+
 
                     break;
                 case 0x503:
@@ -436,15 +469,17 @@ public class writerThread extends Thread {
 //                    totalTorque = sxtn( int(thirdByte+fourthByte[0], 16), len(thirdByte+fourthByte[0])*4)
                     int commandTorque = signConversion( Integer.parseInt( zerothByte + firstByte.substring(0,1), 16), (zerothByte + firstByte.substring(0,1)).length()*4);
                     decodedCanData.setCommandTorque(commandTorque);
-                    displayOnUi("commandTorque", Integer.toString(commandTorque));
 
                     int userTorque =  signConversion( Integer.parseInt( firstByte.substring(1,2) + secondByte, 16), (firstByte.substring(1,2) + secondByte).length()*4);
                     decodedCanData.setUserTorque(userTorque);
-                    displayOnUi("userTorque", Integer.toString(userTorque));
 
                     int totalTorque = signConversion( Integer.parseInt(thirdByte+fourthByte.substring(0,1), 16),(thirdByte+fourthByte.substring(0,1)).length()*4 );
                     decodedCanData.setTotalTorque(totalTorque);
-                    displayOnUi("totalTorque", Integer.toString(totalTorque));
+
+                    displayOnUi("commandTorque", Integer.toString(decodedCanData.getCommandTorque()));
+                    displayOnUi("userTorque", Integer.toString(decodedCanData.getUserTorque()));
+                    displayOnUi("totalTorque", Integer.toString(decodedCanData.getTotalTorque()));
+//
 
                     break;
                 default:

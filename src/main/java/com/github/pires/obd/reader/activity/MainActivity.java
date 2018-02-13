@@ -49,6 +49,7 @@ import com.github.pires.obd.reader.io.MockObdGatewayService;
 import com.github.pires.obd.reader.io.ObdCommandJob;
 import com.github.pires.obd.reader.io.ObdGatewayService;
 import com.github.pires.obd.reader.io.ObdProgressListener;
+import com.github.pires.obd.reader.io.can_data;
 import com.github.pires.obd.reader.net.ObdReading;
 import com.github.pires.obd.reader.net.ObdService;
 import com.github.pires.obd.reader.trips.TripLog;
@@ -286,6 +287,33 @@ public class MainActivity extends RoboActivity implements ObdProgressListener, L
             existingTV.setText(cmdResult);
         } else addTableRow(cmdID, cmdName, cmdResult);
     }
+
+//    public void canBUSUpdateCanData(can_data curCanData) {
+//        Date curDate = new Date(curCanData.getTimeStamp());
+//        SimpleDateFormat sdfDate = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
+//        String strDate = sdfDate.format(curDate);
+//        canBUSUpdate("Timestamp","Timestamp", strDate );
+//        canBUSUpdate("LLQ", "LLQ", Integer.toString(curCanData.getLLQ()));
+//        canBUSUpdate("RLQ", "RLQ", Integer.toString( curCanData.getRLQ()));
+//        canBUSUpdate("trim","trim",  Integer.toString(curCanData.getTrim()));
+//        canBUSUpdate("LLD","LLD", Integer.toString(curCanData.getLLD()));
+//        canBUSUpdate("RLD","RLD", Integer.toString(curCanData.getRLD()));
+//        canBUSUpdate("XD","XD", Integer.toString(curCanData.getXD()));
+//        canBUSUpdate("curve","curve", Integer.toString(curCanData.getCurve()));
+//        canBUSUpdate("speed","speed", Integer.toString(curCanData.getSpeed()));
+//        canBUSUpdate("tAngle","tAngle", Integer.toString(curCanData.getTAngle()));
+//        canBUSUpdate("sAngle","sAngle", Integer.toString(curCanData.getSAngle()));
+//        canBUSUpdate("sRate","sRate", Integer.toString(curCanData.getSRate()));
+//        canBUSUpdate("tErrorIntegral","tErrorIntegral", Integer.toString(curCanData.getTErrorIntegral()));
+//        canBUSUpdate("tError","tError", Integer.toString(curCanData.getTError()));
+//        canBUSUpdate("commandTorque","commandTorque", Integer.toString(curCanData.getCommandTorque()));
+//        canBUSUpdate("userTorque","userTorque", Integer.toString(curCanData.getUserTorque()));
+//        canBUSUpdate("totalTorque","totalTorque", Integer.toString(curCanData.getTotalTorque()));
+////        if (vv.findViewWithTag(cmdID) != null) {
+////            TextView existingTV = (TextView) vv.findViewWithTag(cmdID);
+////            existingTV.setText(cmdResult);
+////        } else addTableRow(cmdID, cmdName, cmdResult);
+//    }
 
     public void incrementRowVal(String cmdID, String keyName, String newIntVal) {
         if (vv.findViewWithTag(cmdID) != null) {
@@ -603,41 +631,41 @@ final String devemail = prefs.getString(ConfigActivity.DEV_EMAIL_KEY,null);
         TextView value = new TextView(this);
 
         value.setGravity(Gravity.LEFT);
-        switch (key) {
-            case "179":
-//                temp= va;
-                //ddsddsddsddsddsdddsdsdd
-                val = val.substring(0,2)+"&"+
-                        val.substring(2,4) + "&"+
-                        val.substring(4,6) + "&" +
-                        val.substring(6,8) + "&" +
-                        val.substring(8,10) + "&" +
-                        val.substring(10,13) + "&" +
-                        val.substring(13,14) + "&" +
-                        val.substring(14,16);
-                break;
-            case "501":
-                //dddsdddsdddsdddsdddsd
-                val = val.substring(0,3)+ " "+
-                        val.substring(3,6) + " " +
-                        val.substring(6,9) + " " +
-                        val.substring(9,12) + " " +
-                        val.substring(12,15) + " " +
-                        val.substring(15,16);
-                break;
-            case "503":
-                //dddsdddsdddsdsddsddsdd
-                val = val.substring(0,3)+ " "+
-                        val.substring(3,6) + " " +
-                        val.substring(6,9) + " " +
-                        val.substring(9,10) + " " +
-                        val.substring(10,12) + " " +
-                        val.substring(12,14) + " " +
-                        val.substring(14,16);
-                break;
-            default:
-                break;
-        }
+//        switch (key) {
+//            case "179":
+////                temp= va;
+//                //ddsddsddsddsddsdddsdsdd
+//                val = val.substring(0,2)+"&"+
+//                        val.substring(2,4) + "&"+
+//                        val.substring(4,6) + "&" +
+//                        val.substring(6,8) + "&" +
+//                        val.substring(8,10) + "&" +
+//                        val.substring(10,13) + "&" +
+//                        val.substring(13,14) + "&" +
+//                        val.substring(14,16);
+//                break;
+//            case "501":
+//                //dddsdddsdddsdddsdddsd
+//                val = val.substring(0,3)+ " "+
+//                        val.substring(3,6) + " " +
+//                        val.substring(6,9) + " " +
+//                        val.substring(9,12) + " " +
+//                        val.substring(12,15) + " " +
+//                        val.substring(15,16);
+//                break;
+//            case "503":
+//                //dddsdddsdddsdsddsddsdd
+//                val = val.substring(0,3)+ " "+
+//                        val.substring(3,6) + " " +
+//                        val.substring(6,9) + " " +
+//                        val.substring(9,10) + " " +
+//                        val.substring(10,12) + " " +
+//                        val.substring(12,14) + " " +
+//                        val.substring(14,16);
+//                break;
+//            default:
+//                break;
+//        }
         value.setText(val);
         value.setTag(id);
         value.setTextSize(TypedValue.COMPLEX_UNIT_PX, 20);

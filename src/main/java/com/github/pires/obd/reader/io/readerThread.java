@@ -97,6 +97,8 @@ public class readerThread extends Thread {
 //                                ((MainActivity) ctxUi).canBUSUpdate( awsUploadStatus,  awsUploadStatus,  Integer.toString(myInternalQ.size()));
 //                            }
 //                        });
+                        Log.d(TAG, this.getName()+ " Working " + Integer.toString( myInternalQ.size())
+                                + "Elements to upload");
                         ArrayList<can_data> canDataLs = myInternalQ.take();
                         ArrayList<can_data> cleanArr = removeDuplicateTs(canDataLs);
                         Long a = System.currentTimeMillis();
@@ -136,7 +138,6 @@ public class readerThread extends Thread {
         for(can_data a: canDataLs){
             if(canDataSet.add(a)) {
                 cleanArr.add(a);
-
             } else {
                 Log.d(TAG, "debugging entered duplicate array");
             }
