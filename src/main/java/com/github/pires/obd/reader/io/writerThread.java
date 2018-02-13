@@ -324,20 +324,20 @@ public class writerThread extends Thread {
 //
 //    }
 
-    private void displayEverything(final can_data curCanData) {
-        Log.d(TAG, "displaying Data on UI Thread");
-
-        ((MainActivity) ctxUi).runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                ((MainActivity) ctxUi).canBUSUpdateCanData(curCanData);
-            }
-        });
-
-
-
-
-    }
+//    private void displayEverything(final can_data curCanData) {
+//        Log.d(TAG, "displaying Data on UI Thread");
+//
+//        ((MainActivity) ctxUi).runOnUiThread(new Runnable() {
+//            @Override
+//            public void run() {
+//                ((MainActivity) ctxUi).canBUSUpdateCanData(curCanData);
+//            }
+//        });
+//
+//
+//
+//
+//    }
 
     private can_data decodeHexData(HashMap<Integer, String> IdDataMap, byte[] elmDataReady) {
 

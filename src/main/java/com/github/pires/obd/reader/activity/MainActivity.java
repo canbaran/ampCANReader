@@ -91,6 +91,7 @@ public class MainActivity extends RoboActivity implements ObdProgressListener, L
     private static final int NO_GPS_SUPPORT = 9;
     private static final int TRIPS_LIST = 10;
     private static final int SAVE_TRIP_NOT_AVAILABLE = 11;
+    private static final int VISUALS = 12;
     private static boolean bluetoothDefaultIsEnable = false;
 
     static {
@@ -483,6 +484,9 @@ public class MainActivity extends RoboActivity implements ObdProgressListener, L
             case TRIPS_LIST:
                 startActivity(new Intent(this, TripListActivity.class));
                 return true;
+            case VISUALS:
+                Log.d(TAG, "about to create visuals" );
+                //startActivity(new Intent(this, VisualsActivity.class));
             // case COMMAND_ACTIVITY:
             // staticCommand();
             // return true;
