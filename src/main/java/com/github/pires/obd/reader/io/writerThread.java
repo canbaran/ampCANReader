@@ -45,7 +45,7 @@ public class writerThread extends Thread {
 //    private String hexID;
     private String vehicleID;
     private String userName;
-    private int blockSize = 256;
+    private int blockSize = 16;//256;
     private  ObdGatewayService myService;
 //    private Long timeStamp;
 //    private Long threadStartTimeStamp;

@@ -1,33 +1,25 @@
 package com.github.pires.obd.reader.io;
 
 import android.content.Context;
-import android.os.Bundle;
-import android.os.Handler;
-import android.os.Message;
 import android.util.Log;
 
 import com.amazonaws.auth.CognitoCachingCredentialsProvider;
-import com.amazonaws.mobileconnectors.dynamodbv2.dynamodbmapper.DynamoDBAttribute;
-import com.amazonaws.mobileconnectors.dynamodbv2.dynamodbmapper.DynamoDBHashKey;
 import com.amazonaws.mobileconnectors.dynamodbv2.dynamodbmapper.DynamoDBMapper;
-import com.amazonaws.mobileconnectors.dynamodbv2.dynamodbmapper.DynamoDBRangeKey;
-import com.amazonaws.mobileconnectors.dynamodbv2.dynamodbmapper.DynamoDBTable;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
+import com.github.pires.obd.reader.App;
 import com.github.pires.obd.reader.activity.MainActivity;
 
-import java.io.PipedInputStream;
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
-import com.github.pires.obd.reader.io.uiNotificationIds;
 
-import amp.internal.io.CanMessage;
+import com.github.pires.obd.reader.database.entity.ampData;
+
 
 import static android.content.ContentValues.TAG;
 import static com.github.pires.obd.reader.io.uiNotificationIds.awsUploadStatus;
@@ -105,6 +97,8 @@ public class readerThread extends Thread {
                         try {
                             mapper.batchSave(cleanArr);
                             myService.setBatchCount( myService.getBatchCount() + cleanArr.size());
+                            //right at thos moment store cleanArr to our internal db as well
+                            storeInternal(cleanArr);
                         } catch (Exception e) {
                             e.printStackTrace();
                         }
@@ -150,6 +144,36 @@ public class readerThread extends Thread {
         {
             return (int) (c1.getTimeStamp()-c2.getTimeStamp());
         }
+    }
+    private void storeInternal(ArrayList<can_data> cleanArr) {
+        List<ampData> list = new ArrayList<>();
+
+        for (int i = 0; i < cleanArr.size(); i++) {
+            ampData curAmpData = new ampData();
+
+            can_data curCanData = cleanArr.get(i);
+
+            curAmpData.setCommandTorque(curCanData.getCommandTorque());
+            curAmpData.setCurve(curCanData.getCurve());
+            curAmpData.setXD(curCanData.getXD());
+            curAmpData.setRLD(curCanData.getRLD());
+            curAmpData.setLLD(curCanData.getLLD());
+//            curAmpData.setTAngle(curCanData.getTAngle());
+            curAmpData.setTError(curCanData.getTError());
+            curAmpData.setUserTorque(curCanData.getUserTorque());
+            curAmpData.setTotalTorque(curCanData.getTotalTorque());
+            curAmpData.setTimestamp(curCanData.getTimeStamp());
+
+            list.add(curAmpData);
+        }
+
+        // insert product list into database
+//        MyDatabase db = ((MainActivity) ctxUi).getDB();
+        App.get().getDB().ampDataDAO().insertAll(list);
+//        List<ampData> test = db.ampDataDAO().getAll();
+
+        // disable flag for force update
+//        App.get().setForceUpdate(false);
     }
 
 

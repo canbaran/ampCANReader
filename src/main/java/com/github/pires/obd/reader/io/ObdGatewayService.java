@@ -60,7 +60,6 @@ import com.amazonaws.regions.Regions;
 import com.amazonaws.services.dynamodbv2.*;
 import com.amazonaws.mobileconnectors.dynamodbv2.dynamodbmapper.*;
 
-import amp.internal.io.CanMessage;
 
 import static android.content.ContentValues.TAG;
 import static com.github.pires.obd.reader.io.uiNotificationIds.awsUploadStatus;

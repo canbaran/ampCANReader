@@ -2,6 +2,7 @@ package com.github.pires.obd.reader.activity;
 
 import android.app.AlertDialog;
 import android.app.Dialog;
+import android.arch.persistence.room.Room;
 import android.bluetooth.BluetoothAdapter;
 import android.content.ComponentName;
 import android.content.Context;
@@ -43,6 +44,7 @@ import com.github.pires.obd.commands.engine.RuntimeCommand;
 import com.github.pires.obd.enums.AvailableCommandNames;
 import com.github.pires.obd.reader.R;
 import com.github.pires.obd.reader.config.ObdConfig;
+import com.github.pires.obd.reader.database.MyDatabase;
 import com.github.pires.obd.reader.io.AbstractGatewayService;
 import com.github.pires.obd.reader.io.LogCSVWriter;
 import com.github.pires.obd.reader.io.MockObdGatewayService;
@@ -93,6 +95,12 @@ public class MainActivity extends RoboActivity implements ObdProgressListener, L
     private static final int SAVE_TRIP_NOT_AVAILABLE = 11;
     private static final int VISUALS = 12;
     private static boolean bluetoothDefaultIsEnable = false;
+
+    //database variables
+    private MyDatabase database;
+    private static final String DATABASE_NAME = "MyDatabase";
+    private static final String PREFERENCES = "RoomDemo.preferences";
+    private static final String KEY_FORCE_UPDATE = "force_update";
 
     static {
         RoboGuice.setUseAnnotationDatabases(false);
@@ -316,6 +324,10 @@ public class MainActivity extends RoboActivity implements ObdProgressListener, L
 ////        } else addTableRow(cmdID, cmdName, cmdResult);
 //    }
 
+    public MyDatabase getDB() {
+        return database;
+    }
+
     public void incrementRowVal(String cmdID, String keyName, String newIntVal) {
         if (vv.findViewWithTag(cmdID) != null) {
             TextView existingTV = (TextView) vv.findViewWithTag(cmdID);
@@ -362,6 +374,10 @@ public class MainActivity extends RoboActivity implements ObdProgressListener, L
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+//        database = Room.databaseBuilder(getApplicationContext(), MyDatabase.class, DATABASE_NAME)
+//                .addMigrations(MyDatabase.MIGRATION_1_2)
+//                .build();
 
         final BluetoothAdapter btAdapter = BluetoothAdapter.getDefaultAdapter();
         if (btAdapter != null)
@@ -459,6 +475,7 @@ public class MainActivity extends RoboActivity implements ObdProgressListener, L
         menu.add(0, GET_DTC, 0, getString(R.string.menu_get_dtc));
         menu.add(0, TRIPS_LIST, 0, getString(R.string.menu_trip_list));
         menu.add(0, SETTINGS, 0, getString(R.string.menu_settings));
+        menu.add(0, VISUALS, 0, getString(R.string.menu_visuals));
         return true;
     }
 
@@ -486,7 +503,12 @@ public class MainActivity extends RoboActivity implements ObdProgressListener, L
                 return true;
             case VISUALS:
                 Log.d(TAG, "about to create visuals" );
-                //startActivity(new Intent(this, VisualsActivity.class));
+                Intent intent = new Intent(this, VisualsActivity.class);
+//                Bundle b = new Bundle();
+//                b.putSerializable("dbHandle", database);
+//                intent.putExtras(b);
+                startActivity(intent);
+                return true;
             // case COMMAND_ACTIVITY:
             // staticCommand();
             // return true;
