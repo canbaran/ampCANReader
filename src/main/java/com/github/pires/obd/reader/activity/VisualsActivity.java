@@ -50,7 +50,7 @@ public class VisualsActivity extends AppCompatActivity {
 //    private static final String CHANNEL_NAME = "stats";
 //    private static final String EVENT_NAME = "new_memory_stat";
 
-    private static final float TOTAL_MEMORY = 20.0f;
+    private static final float TOTAL_MEMORY = 255f;
     private static final float LIMIT_MAX_MEMORY = 20.0f;
     private MyDatabase database;
     private long firstTimeStamp;
@@ -189,14 +189,14 @@ public class VisualsActivity extends AppCompatActivity {
         rightAxis.setEnabled(false);
 
         // Add a limit line
-        LimitLine ll = new LimitLine(LIMIT_MAX_MEMORY, "Upper Limit");
-        ll.setLineWidth(2f);
-        ll.setLabelPosition(LimitLine.LimitLabelPosition.RIGHT_TOP);
-        ll.setTextSize(10f);
-        ll.setTextColor(Color.WHITE);
+//        LimitLine ll = new LimitLine(LIMIT_MAX_MEMORY, "Upper Limit");
+//        ll.setLineWidth(2f);
+//        ll.setLabelPosition(LimitLine.LimitLabelPosition.RIGHT_TOP);
+//        ll.setTextSize(10f);
+//        ll.setTextColor(Color.WHITE);
         // reset all limit lines to avoid overlapping lines
         leftAxis.removeAllLimitLines();
-        leftAxis.addLimitLine(ll);
+//        leftAxis.addLimitLine(ll);
         // limit lines are drawn behind data (and not on top)
         leftAxis.setDrawLimitLinesBehindData(true);
     }
@@ -285,5 +285,11 @@ public class VisualsActivity extends AppCompatActivity {
     @Override
     public void onDestroy() {
         super.onDestroy();
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                App.get().getDB().ampDataDAO().deleteTable();
+            }
+        }).start();
     }
 }

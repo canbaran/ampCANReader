@@ -100,6 +100,7 @@ public class ObdGatewayService extends AbstractGatewayService {
     private String CMEnum = "";
     //
     DynamoDBMapper mapper;
+    private ArrayList<String> noUpdateList = new ArrayList<String>();
 
 
 
@@ -107,6 +108,15 @@ public class ObdGatewayService extends AbstractGatewayService {
 
     public void startService() throws IOException {
         Log.d(TAG, "Starting service..");
+
+        noUpdateList.add("Reset OBD");
+        noUpdateList.add("Format Off");
+        noUpdateList.add("Spaces Off");
+        noUpdateList.add("Echo Off");
+        noUpdateList.add("Header On");
+        noUpdateList.add("Filter Can withCF 500");
+        noUpdateList.add("Filter Can withCM 7FC");
+
         CF = prefs.getString(ConfigActivity.CF_hex, "7ff");
         ((MainActivity) ctx).runOnUiThread(new Runnable() {
             @Override
@@ -389,7 +399,8 @@ public class ObdGatewayService extends AbstractGatewayService {
                 Log.e(TAG, "Failed to run command. -> " + e.getMessage());
             }
 
-            if (job != null) {
+            if (job != null && !noUpdateList.contains( job.getCommand().getName() )
+                    ) {
                 final ObdCommandJob job2 = job;
                 ((MainActivity) ctx).runOnUiThread(new Runnable() {
                     @Override

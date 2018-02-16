@@ -21,6 +21,9 @@ public interface ampDataDAO {
     @Query("SELECT * FROM ampData WHERE timestamp >= :t1 and timestamp <= :t2 order by timestamp asc")
     List<ampData> findByTimeStampInterval(Long t1, Long t2);
 
+    @Query("DELETE FROM ampData")
+    void deleteTable();
+
     @Insert
     void insertAll(List<ampData> products);
 

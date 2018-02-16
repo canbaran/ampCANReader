@@ -42,6 +42,7 @@ import com.github.pires.obd.commands.SpeedCommand;
 import com.github.pires.obd.commands.engine.RPMCommand;
 import com.github.pires.obd.commands.engine.RuntimeCommand;
 import com.github.pires.obd.enums.AvailableCommandNames;
+import com.github.pires.obd.reader.App;
 import com.github.pires.obd.reader.R;
 import com.github.pires.obd.reader.config.ObdConfig;
 import com.github.pires.obd.reader.database.MyDatabase;
@@ -374,6 +375,8 @@ public class MainActivity extends RoboActivity implements ObdProgressListener, L
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        //delete db
+
 
 //        database = Room.databaseBuilder(getApplicationContext(), MyDatabase.class, DATABASE_NAME)
 //                .addMigrations(MyDatabase.MIGRATION_1_2)
@@ -405,6 +408,13 @@ public class MainActivity extends RoboActivity implements ObdProgressListener, L
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        //delete entries from our sqlite database
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                App.get().getDB().ampDataDAO().deleteTable();
+            }
+        }).start();
 
         if (mLocService != null) {
             mLocService.removeGpsStatusListener(this);
