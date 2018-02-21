@@ -131,7 +131,7 @@ public class writerThread extends Thread {
                         break;
                     }
                     //if stationary dont log
-                    if ( curData.getSpeed() > thresholdSpeed ) {
+                    if ( curData.getSpeed() >= thresholdSpeed ) {
                         canDataLs.add(curData);
                     }
                     final int iteratorI= i;
@@ -513,7 +513,7 @@ public class writerThread extends Thread {
     }
 
     private void displayOnUi(final String variableName, final String variableValue, int speed) {
-        if ( speed > thresholdSpeed ) {
+        if ( speed >= thresholdSpeed ) {
             ((MainActivity) ctxUi).runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
