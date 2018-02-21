@@ -405,6 +405,8 @@ public class writerThread extends Thread {
                     int XD = signConversion(Integer.parseInt( fourthByte, 16), fourthByte.length()*4);
                     decodedCanData.setXD(XD);
                     int curve = signConversion(Integer.parseInt( fifthByte+sixthByte.substring(0,1), 16), (fifthByte+sixthByte.substring(0,1)).length()*4);
+                    Log.d(TAG, "Message 500: " + curVal);
+                    Log.d(TAG,"curvature HEX data: " +  fifthByte+sixthByte.substring(0,1));
                     decodedCanData.setCurve(curve);
                     speed = Integer.parseInt( seventhByte, 16);
                     decodedCanData.setSpeed(speed);
