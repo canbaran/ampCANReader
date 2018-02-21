@@ -95,10 +95,11 @@ public class readerThread extends Thread {
                         ArrayList<can_data> cleanArr = removeDuplicateTs(canDataLs);
                         Long a = System.currentTimeMillis();
                         try {
+                            storeInternal(cleanArr);
                             mapper.batchSave(cleanArr);
                             myService.setBatchCount( myService.getBatchCount() + cleanArr.size());
                             //right at thos moment store cleanArr to our internal db as well
-                            storeInternal(cleanArr);
+
                         } catch (Exception e) {
                             e.printStackTrace();
                         }
@@ -147,7 +148,7 @@ public class readerThread extends Thread {
     }
     private void storeInternal(ArrayList<can_data> cleanArr) {
         List<ampData> list = new ArrayList<>();
-
+        Log.d(TAG, "about to store internally an array of size: " + Integer.toString(cleanArr.size()));
         for (int i = 0; i < cleanArr.size(); i++) {
             ampData curAmpData = new ampData();
 

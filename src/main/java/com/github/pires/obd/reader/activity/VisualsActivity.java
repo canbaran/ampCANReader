@@ -109,7 +109,7 @@ public class VisualsActivity extends AppCompatActivity {
                     List<ampData> myAmpDataLs =  App.get().getDB().ampDataDAO().findByTimeStampInterval(System.currentTimeMillis()-15*1000, System.currentTimeMillis() );
 //                    addEntry(x, 1);
 //                    x++;
-
+                    Log.d("visuals", "size of the array from internal db: " + Integer.toString(myAmpDataLs.size()));
 //                    Log.d("visuals", "inside forever while loop");
 //                    Log.d("visuals", "beginning timestamp: " + Long.toString(createSystemTime) + " upper timestamp:" + Long.toString(System.currentTimeMillis()));
                     for (int i=0; i<myAmpDataLs.size(); i++) {
