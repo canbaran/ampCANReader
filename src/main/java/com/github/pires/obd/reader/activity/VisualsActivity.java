@@ -54,8 +54,12 @@ public class VisualsActivity extends AppCompatActivity {
 //    private static final String CHANNEL_NAME = "stats";
 //    private static final String EVENT_NAME = "new_memory_stat";
 
-    private static final float TOTAL_MEMORY = 255f;
-    private static final float LIMIT_MAX_MEMORY = 20.0f;
+//    private static final float TOTAL_MEMORY = 255f;
+//    private static final float LIMIT_MAX_MEMORY = 20.0f;
+    private static final float xdLim = 20;
+    private static final float offsetLim = 18;
+    private static final float curveLim = 250;
+
     private MyDatabase database;
     private long firstTimeStamp;
 //    private ArrayList<Long> x = new ArrayList<Long>();
@@ -71,16 +75,35 @@ public class VisualsActivity extends AppCompatActivity {
         mChartXd = (LineChart) findViewById(R.id.chart_xD);
         mChartCurvature = (LineChart) findViewById(R.id.chart_curvature);
         mChartCenterOffset = (LineChart) findViewById(R.id.chart_offset);
-        chartArr.add(mChartXd);
-        chartArr.add(mChartCurvature);
-        chartArr.add(mChartCenterOffset);
+        //configure Xd Chart
+        setupChart(mChartXd);
+        setupAxes(mChartXd, xdLim);
+        setupData(mChartXd, Color.WHITE);
+        setLegend(mChartXd);
+        //configure curve Chart
+        setupChart(mChartCurvature);
+        setupAxes(mChartCurvature, curveLim);
+        setupData(mChartCurvature, Color.RED);
+        setLegend(mChartCurvature);
+        //configure Offset Chart
+        setupChart(mChartCenterOffset);
+        setupAxes(mChartCenterOffset, offsetLim);
+        setupData(mChartCenterOffset, Color.BLUE);
+        setLegend(mChartCenterOffset);
 
-        for(LineChart i : chartArr) {
-            setupChart(i);
-            setupAxes(i);
-            setupData(i);
-            setLegend(i);
-        }
+
+
+
+//        chartArr.add(mChartXd);
+//        chartArr.add(mChartCurvature);
+//        chartArr.add(mChartCenterOffset);
+//
+//        for(LineChart i : chartArr) {
+//            setupChart(i);
+//            setupAxes(i);
+//            setupData(i);
+//            setLegend(i);
+//        }
 
 
 //        Intent intent = this.getIntent();
@@ -130,8 +153,8 @@ public class VisualsActivity extends AppCompatActivity {
 //                                    Gson gson = new Gson();
 //                                    Stat stat = gson.fromJson(data, Stat.class);
                                     addEntry(x2, curXd, mChartXd, "Xd");
-                                    addEntry(x2, curCurvature, mChartCenterOffset, "CenterOffset");
-                                    addEntry(x2, curCenterOffset, mChartCurvature, "Curvature");
+                                    addEntry(x2, curCenterOffset, mChartCenterOffset, "CenterOffset");
+                                    addEntry(x2, curCurvature, mChartCurvature, "Curvature");
 
                                 }
                             });
@@ -199,7 +222,7 @@ public class VisualsActivity extends AppCompatActivity {
         } else if (RLDTarget > 0) {
             centerOffset = curRLD - RLDTarget;
         } else {
-            centerOffset = -255;
+            centerOffset = -20;
         }
 
 //        LLDTarget = 0;
@@ -246,7 +269,7 @@ public class VisualsActivity extends AppCompatActivity {
     }
 
 
-    private void setupAxes(LineChart curChart) {
+    private void setupAxes(LineChart curChart, float relevantLim) {
         XAxis xl = curChart.getXAxis();
         xl.setTextColor(Color.WHITE);
         xl.setDrawGridLines(false);
@@ -255,8 +278,8 @@ public class VisualsActivity extends AppCompatActivity {
 
         YAxis leftAxis = curChart.getAxisLeft();
         leftAxis.setTextColor(Color.WHITE);
-        leftAxis.setAxisMaximum(TOTAL_MEMORY);
-//        leftAxis.setAxisMinimum(0f);
+        leftAxis.setAxisMaximum(relevantLim);
+        leftAxis.setAxisMinimum(relevantLim * (-1) );
         leftAxis.setDrawGridLines(true);
 
         YAxis rightAxis = curChart.getAxisRight();
@@ -275,9 +298,9 @@ public class VisualsActivity extends AppCompatActivity {
         leftAxis.setDrawLimitLinesBehindData(true);
     }
 
-    private void setupData(LineChart curChart) {
+    private void setupData(LineChart curChart, int relevantColor ) {
         LineData data = new LineData();
-        data.setValueTextColor(Color.WHITE);
+        data.setValueTextColor(relevantColor);
 
         // add empty data
         curChart.setData(data);
