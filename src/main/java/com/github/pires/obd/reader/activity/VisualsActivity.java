@@ -319,10 +319,25 @@ public class VisualsActivity extends AppCompatActivity {
         LineDataSet set = new LineDataSet(null, labelInfo);
         set.setAxisDependency(YAxis.AxisDependency.LEFT);
         set.setColors(ColorTemplate.VORDIPLOM_COLORS[0]);
-        set.setCircleColor(Color.WHITE);
+        int curColor = 0;
+        switch (labelInfo) {
+            case "Xd":
+                curColor = Color.WHITE;
+                break;
+            case "CenterOffset":
+                curColor = Color.RED;
+                break;
+            case "Curvature":
+                curColor = Color.BLUE;
+                break;
+            default:
+                curColor = Color.WHITE;
+                break;
+        }
+        set.setCircleColor(curColor);
         set.setLineWidth(2f);
         set.setCircleRadius(4f);
-        set.setValueTextColor(Color.WHITE);
+        set.setValueTextColor(curColor);
         set.setValueTextSize(10f);
         // To show values of each point
         set.setDrawValues(true);
