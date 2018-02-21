@@ -39,7 +39,11 @@ import static com.github.pires.obd.reader.trips.TripLog.DATABASE_NAME;
  */
 
 public class VisualsActivity extends AppCompatActivity {
-    private LineChart mChart;
+    private LineChart mChartXd;
+    private LineChart mChartCenterOffset;
+    private LineChart mChartCurvature;
+    private ArrayList<LineChart> chartArr = new ArrayList<LineChart>();
+
     private Runnable mTimer1;
     private final Handler mHandler = new Handler();
     private long createSystemTime;
@@ -64,16 +68,26 @@ public class VisualsActivity extends AppCompatActivity {
         setContentView(R.layout.plots_layout);
        //find the earliest time in db
 
-        mChart = (LineChart) findViewById(R.id.chart_for_plot);
+        mChartXd = (LineChart) findViewById(R.id.chart_xD);
+        mChartCurvature = (LineChart) findViewById(R.id.chart_curvature);
+        mChartCenterOffset = (LineChart) findViewById(R.id.chart_offset);
+        chartArr.add(mChartXd);
+        chartArr.add(mChartCurvature);
+        chartArr.add(mChartCenterOffset);
+
+        for(LineChart i : chartArr) {
+            setupChart(i);
+            setupAxes(i);
+            setupData(i);
+            setLegend(i);
+        }
+
 
 //        Intent intent = this.getIntent();
 //        Bundle bundle = intent.getExtras();
 //        database = ( MyDatabase) bundle.getSerializable("dbHandle");
 
-        setupChart();
-        setupAxes();
-        setupData();
-        setLegend();
+
 
         //database init
 
@@ -100,21 +114,25 @@ public class VisualsActivity extends AppCompatActivity {
 //                    Log.d("visuals", "beginning timestamp: " + Long.toString(createSystemTime) + " upper timestamp:" + Long.toString(System.currentTimeMillis()));
                     for (int i=0; i<myAmpDataLs.size(); i++) {
                         Long curX = myAmpDataLs.get(i).getTimestamp(); //- firstTimeStamp ) / 1000;
-                        if (curX - previousTimeStamp > 500 ) {
+                        if (curX - previousTimeStamp > 100 ) { //do it at 10hz not 2hz
                             long x = ( curX - firstTimeStamp)/1000;
-                            int y = myAmpDataLs.get(i).getXD();
+                            final int curXd = myAmpDataLs.get(i).getXD();
+                            final int curCurvature = myAmpDataLs.get(i).getCurve();
+                            final int curCenterOffset = calculateOffset(myAmpDataLs.get(i) );
                             //                    double f = mRand.nextDouble()*0.15+0.3;
                             //                    float y = (float) ( 10*(Math.sin(i*f+2) + mRand.nextDouble()*0.3));
-                            Log.d("visuals", "in for loop:x= " + Long.toString(x) + " y= " + Float.toString(y));
+                            Log.d("visuals", "in for loop:x= " + Long.toString(x) + " y= " + Float.toString(curXd));
                             final long x2 =x;
-                            final int y2 = y;
                             runOnUiThread(new Runnable() {
                                 @Override
                                 public void run() {
 //                                    System.out.println("Received event with data: " + data);
 //                                    Gson gson = new Gson();
 //                                    Stat stat = gson.fromJson(data, Stat.class);
-                                    addEntry(x2, y2);
+                                    addEntry(x2, curXd, mChartXd, "Xd");
+                                    addEntry(x2, curCurvature, mChartCenterOffset, "CenterOffset");
+                                    addEntry(x2, curCenterOffset, mChartCurvature, "Curvature");
+
                                 }
                             });
 //                            addEntry(x, y);
@@ -157,35 +175,91 @@ public class VisualsActivity extends AppCompatActivity {
 //        pusher.connect();
 
     }
-    private void setupChart() {
+    private int calculateOffset(ampData curAmpData ) {
+        int centerOffset = 0;
+        int LLDTarget = 0;
+        int RLDTarget = 0;
+        int curLLD = curAmpData.getLLD();
+        int curRLD = curAmpData.getRLD();
+        if (curLLD != 255 && curLLD > 2){
+            if (curRLD != 255 && curRLD > 2) {
+                if (curRLD<40) {
+                    LLDTarget = (curLLD + curRLD) / 2;
+                } else {
+                    LLDTarget = (curLLD + 40)/2;
+                }
+            } else {
+                LLDTarget = 35;
+            }
+        } else if(curRLD != 255 && curRLD>2) {
+            RLDTarget = 32;
+        }
+        if (LLDTarget > 0 ) {
+            centerOffset = LLDTarget - curLLD;
+        } else if (RLDTarget > 0) {
+            centerOffset = curRLD - RLDTarget;
+        } else {
+            centerOffset = -255;
+        }
+
+//        LLDTarget = 0;
+//        RLDTarget = 0;
+//        if((LLD!=255)&&(LLD>2)){
+//            if((RLD!=255)&&(RLD>2)){
+//                if(RLD<40){
+//                    LLDTarget= (unsigned char)(LLD+RLD)/2;
+//                }
+//                else {
+//                    LLDTarget = (unsigned char)(LLD+40)/2;
+//                }
+//            }
+//            else {
+//                LLDTarget = 35;
+//            }
+//        }
+//        else if((RLD!=255)&&(RLD>2)){
+//            RLDTarget = 32;
+//        }
+//
+//
+//
+//        if(LLDTarget)
+//            center_offset = LLDTarget-LLD;  // this is our error in our position control loop
+//        else if(RLDTarget)
+//            center_offset = RLD-RLDTarget;
+//        else
+//... no lanes.
+        return centerOffset;
+    }
+    private void setupChart(LineChart curChart) {
         // disable description text
-        mChart.getDescription().setEnabled(false);
+        curChart.getDescription().setEnabled(false);
         // enable touch gestures
-        mChart.setTouchEnabled(true);
+        curChart.setTouchEnabled(true);
         // if disabled, scaling can be done on x- and y-axis separately
-        mChart.setPinchZoom(true);
+        curChart.setPinchZoom(true);
         // enable scaling
-        mChart.setScaleEnabled(true);
-        mChart.setDrawGridBackground(false);
+        curChart.setScaleEnabled(true);
+        curChart.setDrawGridBackground(false);
         // set an alternative background color
-        mChart.setBackgroundColor(Color.DKGRAY);
+        curChart.setBackgroundColor(Color.DKGRAY);
     }
 
 
-    private void setupAxes() {
-        XAxis xl = mChart.getXAxis();
+    private void setupAxes(LineChart curChart) {
+        XAxis xl = curChart.getXAxis();
         xl.setTextColor(Color.WHITE);
         xl.setDrawGridLines(false);
         xl.setAvoidFirstLastClipping(true);
         xl.setEnabled(true);
 
-        YAxis leftAxis = mChart.getAxisLeft();
+        YAxis leftAxis = curChart.getAxisLeft();
         leftAxis.setTextColor(Color.WHITE);
         leftAxis.setAxisMaximum(TOTAL_MEMORY);
 //        leftAxis.setAxisMinimum(0f);
         leftAxis.setDrawGridLines(true);
 
-        YAxis rightAxis = mChart.getAxisRight();
+        YAxis rightAxis = curChart.getAxisRight();
         rightAxis.setEnabled(false);
 
         // Add a limit line
@@ -201,25 +275,25 @@ public class VisualsActivity extends AppCompatActivity {
         leftAxis.setDrawLimitLinesBehindData(true);
     }
 
-    private void setupData() {
+    private void setupData(LineChart curChart) {
         LineData data = new LineData();
         data.setValueTextColor(Color.WHITE);
 
         // add empty data
-        mChart.setData(data);
+        curChart.setData(data);
     }
 
-    private void setLegend() {
+    private void setLegend(LineChart curChart) {
         // get the legend (only possible after setting data)
-        Legend l = mChart.getLegend();
+        Legend l = curChart.getLegend();
 
         // modify the legend ...
         l.setForm(Legend.LegendForm.CIRCLE);
         l.setTextColor(Color.WHITE);
     }
 
-    private LineDataSet createSet() {
-        LineDataSet set = new LineDataSet(null, "Can Data");
+    private LineDataSet createSet(String labelInfo) {
+        LineDataSet set = new LineDataSet(null, labelInfo);
         set.setAxisDependency(YAxis.AxisDependency.LEFT);
         set.setColors(ColorTemplate.VORDIPLOM_COLORS[0]);
         set.setCircleColor(Color.WHITE);
@@ -233,8 +307,15 @@ public class VisualsActivity extends AppCompatActivity {
         return set;
     }
 
-    private void addEntry(float x, float y) {
-        LineData data = mChart.getData();
+    private void addEntry(float x, float y, LineChart relevantChart, String labelInfo) {
+        LineData data = relevantChart.getData();
+        //todo dont label every point
+        //todo how often do we get an error from the steering unit
+        //todo how many times does the power steering have a fault
+        //todo how often does the lane quality detoriate per toyota
+        //todo distribution of lane quality, when it is bad, how bad does the curvature get?
+        //todo center from the offset
+        //todo fix the Y axis
 
 //        Entery text = new Entry();
 
@@ -242,7 +323,7 @@ public class VisualsActivity extends AppCompatActivity {
             ILineDataSet set = data.getDataSetByIndex(0);
 
             if (set == null) {
-                set = createSet();
+                set = createSet(labelInfo);
                 data.addDataSet(set);
             }
 
@@ -250,13 +331,13 @@ public class VisualsActivity extends AppCompatActivity {
 
             // let the chart know it's data has changed
             data.notifyDataChanged();
-            mChart.notifyDataSetChanged();
+            relevantChart.notifyDataSetChanged();
 
             // limit the number of visible entries
-            mChart.setVisibleXRangeMaximum(15);
+            relevantChart.setVisibleXRangeMaximum(75); //todo this needs to be increased 75
 
             // move to the latest entry
-            mChart.moveViewToX(data.getXMax()); //data.getEntryCount()
+            relevantChart.moveViewToX(data.getXMax()); //data.getEntryCount()
         }
     }
 
