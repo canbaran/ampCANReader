@@ -17,7 +17,7 @@ import java.io.Serializable;
 
 @Database(entities = {ampData.class}, version = 2)
 //@TypeConverters({DateTypeConverter.class})
-public abstract class MyDatabase extends RoomDatabase implements Serializable {
+public abstract class MyDatabase extends RoomDatabase  {
     public abstract ampDataDAO ampDataDAO();
 
     public static final Migration MIGRATION_1_2 = new Migration(1, 2) {

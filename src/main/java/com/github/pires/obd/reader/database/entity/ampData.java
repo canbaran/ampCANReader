@@ -10,8 +10,8 @@ import java.io.Serializable;
 /**
  * Created by canbaran on 2/15/18.
  */
-@Entity
-public class ampData implements Serializable {
+@Entity(tableName = "ampData")
+public class ampData {
     @PrimaryKey(autoGenerate = false)
     private long timestamp;
     public long getTimestamp() {

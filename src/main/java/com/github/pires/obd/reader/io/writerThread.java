@@ -8,9 +8,11 @@ import android.os.SystemClock;
 import android.support.annotation.NonNull;
 import android.util.Log;
 
+import com.github.pires.obd.reader.App;
 import com.github.pires.obd.reader.R;
 import com.github.pires.obd.reader.activity.ConfigActivity;
 import com.github.pires.obd.reader.activity.MainActivity;
+import com.github.pires.obd.reader.database.entity.ampData;
 
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -46,7 +48,7 @@ public class writerThread extends Thread {
 //    private String hexID;
     private String vehicleID;
     private String userName;
-    private int blockSize = 256;
+    private int blockSize = 16;
     private  ObdGatewayService myService;
 //    private Long timeStamp;
 //    private Long threadStartTimeStamp;
@@ -133,6 +135,7 @@ public class writerThread extends Thread {
                     //if stationary dont log
                     if ( curData.getSpeed() >= thresholdSpeed ) {
                         canDataLs.add(curData);
+
                     }
                     final int iteratorI= i;
                     ((MainActivity) ctxUi).runOnUiThread(new Runnable() {
@@ -151,6 +154,7 @@ public class writerThread extends Thread {
                     curData.setTimeStamp(curTimeStamp);
 //                    displayEverything(curData);
                     curData.setVIN(vehicleID);
+                    storeSingleInternally( curData );
 //                    canDataLs.remove(i);
 //                    canDataLs.add(curData);
                 }
@@ -183,7 +187,19 @@ public class writerThread extends Thread {
         return data;
     }
 
-
+    private void storeSingleInternally( can_data curCanData ) {
+        ampData curAmpData = new ampData();
+        curAmpData.setCommandTorque(curCanData.getCommandTorque());
+        curAmpData.setCurve(curCanData.getCurve());
+        curAmpData.setXD(curCanData.getXD());
+        curAmpData.setRLD(curCanData.getRLD());
+        curAmpData.setLLD(curCanData.getLLD());
+        curAmpData.setTError(curCanData.getTError());
+        curAmpData.setUserTorque(curCanData.getUserTorque());
+        curAmpData.setTotalTorque(curCanData.getTotalTorque());
+        curAmpData.setTimestamp(curCanData.getTimeStamp());
+        App.get().getDB().ampDataDAO().insertAll(curAmpData);
+    }
 
     @NonNull
     private can_data readDataFromElm() {
@@ -405,8 +421,8 @@ public class writerThread extends Thread {
                     int XD = signConversion(Integer.parseInt( fourthByte, 16), fourthByte.length()*4);
                     decodedCanData.setXD(XD);
                     int curve = signConversion(Integer.parseInt( fifthByte+sixthByte.substring(0,1), 16), (fifthByte+sixthByte.substring(0,1)).length()*4);
-                    Log.d(TAG, "Message 500: " + curVal);
-                    Log.d(TAG,"curvature HEX data: " +  fifthByte+sixthByte.substring(0,1));
+//                    Log.d(TAG, "Message 500: " + curVal);
+//                    Log.d(TAG,"curvature HEX data: " +  fifthByte+sixthByte.substring(0,1));
                     decodedCanData.setCurve(curve);
                     speed = Integer.parseInt( seventhByte, 16);
                     decodedCanData.setSpeed(speed);

@@ -47,6 +47,7 @@ public class VisualsActivity extends AppCompatActivity {
     private Runnable mTimer1;
     private final Handler mHandler = new Handler();
     private long createSystemTime;
+    private ArrayList<Long> timestampArr = new ArrayList<>();
 //    private Pusher pusher;
 //
 //    private static final String PUSHER_APP_KEY = "<INSERT_PUSHER_KEY>";
@@ -119,58 +120,9 @@ public class VisualsActivity extends AppCompatActivity {
         new Thread(new Runnable() {
             @Override
             public void run() {
-                Log.d("visuals", "entering the thread");
-                List<ampData> temp =  App.get().getDB().ampDataDAO().findByTimeStampInterval( (long) 0, System.currentTimeMillis() );
-                firstTimeStamp = temp.get(0).getTimestamp();
-                Log.d("visuals", Long.toString(firstTimeStamp));
-                long previousTimeStamp = firstTimeStamp;
-//                long x = 0;
 
-//
-                int count=1;
-                while(true) {
-                    List<ampData> myAmpDataLs =  App.get().getDB().ampDataDAO().findByTimeStampInterval(System.currentTimeMillis()-15*1000, System.currentTimeMillis() );
-//                    addEntry(x, 1);
-//                    x++;
-                    Log.d("visuals", "size of the array from internal db: " + Integer.toString(myAmpDataLs.size()));
-//                    Log.d("visuals", "inside forever while loop");
-//                    Log.d("visuals", "beginning timestamp: " + Long.toString(createSystemTime) + " upper timestamp:" + Long.toString(System.currentTimeMillis()));
-                    for (int i=0; i<myAmpDataLs.size(); i++) {
-                        Long curX = myAmpDataLs.get(i).getTimestamp(); //- firstTimeStamp ) / 1000;
-                        if (curX - previousTimeStamp > 100 ) { //do it at 10hz not 2hz
-                            long x = ( curX - firstTimeStamp)/1000;
-                            final int curXd = myAmpDataLs.get(i).getXD();
-                            final int curCurvature = myAmpDataLs.get(i).getCurve();
-                            final int curCenterOffset = calculateOffset(myAmpDataLs.get(i) );
-                            //                    double f = mRand.nextDouble()*0.15+0.3;
-                            //                    float y = (float) ( 10*(Math.sin(i*f+2) + mRand.nextDouble()*0.3));
-                            Log.d("visuals", "in for loop:x= " + Long.toString(x) + " y= " + Float.toString(curXd));
-                            final long x2 =x;
-                            runOnUiThread(new Runnable() {
-                                @Override
-                                public void run() {
-//                                    System.out.println("Received event with data: " + data);
-//                                    Gson gson = new Gson();
-//                                    Stat stat = gson.fromJson(data, Stat.class);
-                                    addEntry(x2, curXd, mChartXd, "Xd");
-                                    addEntry(x2, curCenterOffset, mChartCenterOffset, "CenterOffset");
-                                    addEntry(x2, curCurvature, mChartCurvature, "Curvature");
+                queryDBPlotData();
 
-                                }
-                            });
-//                            addEntry(x, y);
-                            previousTimeStamp = curX;
-                        }
-//                        Log.d("visuals", "in for loop:x= " + Long.toString(curX) + " y= " + Float.toString(y));
-                    }
-                }
-//                List<Product> products = App.get().getDB().productDao().getAll();
-//                boolean force = App.get().isForceUpdate();
-//                if (force || products.isEmpty()) {
-//                    retrieveProducts();
-//                } else {
-//                    populateProducts(products);
-//                }
             }
         }).start();
 
@@ -318,7 +270,9 @@ public class VisualsActivity extends AppCompatActivity {
     private LineDataSet createSet(String labelInfo) {
         LineDataSet set = new LineDataSet(null, labelInfo);
         set.setAxisDependency(YAxis.AxisDependency.LEFT);
-        set.setColors(ColorTemplate.VORDIPLOM_COLORS[0]);
+
+//        ColorTemplate.VORDIPLOM_COLORS
+
         int curColor = 0;
         switch (labelInfo) {
             case "Xd":
@@ -334,6 +288,7 @@ public class VisualsActivity extends AppCompatActivity {
                 curColor = Color.WHITE;
                 break;
         }
+        set.setColors(curColor); //ColorTemplate.VORDIPLOM_COLORS[0]
         set.setCircleColor(curColor);
         set.setLineWidth(2f);
         set.setCircleRadius(4f);
@@ -365,6 +320,12 @@ public class VisualsActivity extends AppCompatActivity {
                 data.addDataSet(set);
             }
 
+//            ILineDataSet test = new ILineDataSet();
+//
+//            if ( data ) {
+//
+//            }
+
             data.addEntry(new Entry(x, y), 0);
 
             // let the chart know it's data has changed
@@ -379,35 +340,83 @@ public class VisualsActivity extends AppCompatActivity {
         }
     }
 
-//    @Override
-//    public void onResume() {
-//        super.onResume();  // Always call the superclass method first
-//        mTimer1 = new Runnable() {
-//            @Override
-//            public void run() {
-//                List<ampData> myAmpDataLs =  App.get().getDB().ampDataDAO().findByTimeStampInterval(System.currentTimeMillis()-15*1000, System.currentTimeMillis() );
-//
-//                for( int i=0; i<10; i++) {
-//                    addEntry(i,1);
-//                }
-//                mHandler.postDelayed(this, 300);
-//            }
-//        };
-//        mHandler.postDelayed(mTimer1, 300);
-//
-//    }
-//    double mLastRandom = 2;
-//    Random mRand = new Random();
-//    private double getRandom() {
-//        return mLastRandom += mRand.nextDouble()*0.5 - 0.25;
-//    }
+    private void queryDBPlotData() {
+        Log.d("visuals", "entering the thread");
+        List<ampData> temp = App.get().getDB().ampDataDAO().findByFirstTimestamp();
+        if (temp.size() > 0) {
+            firstTimeStamp = temp.get(0).getTimestamp();
+            Log.d("visuals", Long.toString(firstTimeStamp));
+            long previousTimeStamp = firstTimeStamp;
+//            LineData curLineData = mChartXd.getLineData();
+//            long curHighestTimePoint = (long) curLineData.getXMax();
+            List<ampData> myAmpDataLs = App.get().getDB().ampDataDAO().findByTimeStampInterval(System.currentTimeMillis() - 15 * 1000, System.currentTimeMillis()); //
+            for (int i = 0; i < myAmpDataLs.size(); i++) {
+                Long curX = myAmpDataLs.get(i).getTimestamp(); //- firstTimeStamp ) / 1000;
+                if (curX - previousTimeStamp > 100) { //do it at 10hz not 2hz
+                    long x = (curX - firstTimeStamp) / 1000;
+                    final int curXd = myAmpDataLs.get(i).getXD();
+                    final int curCurvature = myAmpDataLs.get(i).getCurve();
+                    final int curCenterOffset = calculateOffset(myAmpDataLs.get(i));
+                    //                    double f = mRand.nextDouble()*0.15+0.3;
+                    //                    float y = (float) ( 10*(Math.sin(i*f+2) + mRand.nextDouble()*0.3));
+                    Log.d("visuals", "Curx: " + Long.toString(curX));
+                    Log.d("visuals", "First TimeStamp: " + Long.toString(firstTimeStamp));
+
+                    Log.d("visuals", "in for loop:x= " + Long.toString(x) + " y= " + Float.toString(curXd));
+                    if (!timestampArr.contains(x)) {
+                        final long x2 = x;
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                addEntry(x2, curXd, mChartXd, "Xd");
+                                addEntry(x2, curCenterOffset, mChartCenterOffset, "CenterOffset");
+                                addEntry(x2, curCurvature, mChartCurvature, "Curvature");
+                            }
+                        });
+                        timestampArr.add(x);
+                    }
+                    previousTimeStamp = curX;
+                }
+            }
+        }
+
+    }
+
+        @Override
+    public void onResume() {
+        super.onResume();  // Always call the superclass method first
+        mTimer1 = new Runnable() {
+            @Override
+            public void run() {
+
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+
+                        queryDBPlotData();
+
+                    }
+                }).start();
+
+                mHandler.postDelayed(this, 300);
+            }
+        };
+        mHandler.postDelayed(mTimer1, 300);
+
+    }
+
     @Override
     public void onDestroy() {
         super.onDestroy();
+        Log.d("visuals", "destroy is entered");
+        timestampArr.clear();
         new Thread(new Runnable() {
             @Override
             public void run() {
-                App.get().getDB().ampDataDAO().deleteTable();
+
+                int deletedRows = App.get().getDB().ampDataDAO().deleteTable();
+                Log.d("visuals", "deleted number of Rows: " + Integer.toString(deletedRows));
+
             }
         }).start();
     }
