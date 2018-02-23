@@ -7,6 +7,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.view.WindowManager;
 
 
 import com.github.mikephil.charting.charts.LineChart;
@@ -70,6 +71,7 @@ public class VisualsActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         setContentView(R.layout.plots_layout);
        //find the earliest time in db
 
@@ -292,10 +294,10 @@ public class VisualsActivity extends AppCompatActivity {
         set.setCircleColor(curColor);
         set.setLineWidth(2f);
         set.setCircleRadius(4f);
-        set.setValueTextColor(curColor);
-        set.setValueTextSize(10f);
+//        set.setValueTextColor(curColor);
+//        set.setValueTextSize(10f);
         // To show values of each point
-        set.setDrawValues(true);
+        set.setDrawValues(false);
 
         return set;
     }
@@ -345,7 +347,7 @@ public class VisualsActivity extends AppCompatActivity {
         List<ampData> temp = App.get().getDB().ampDataDAO().findByFirstTimestamp();
         if (temp.size() > 0) {
             firstTimeStamp = temp.get(0).getTimestamp();
-            Log.d("visuals", Long.toString(firstTimeStamp));
+//            Log.d("visuals", Long.toString(firstTimeStamp));
             long previousTimeStamp = firstTimeStamp;
 //            LineData curLineData = mChartXd.getLineData();
 //            long curHighestTimePoint = (long) curLineData.getXMax();
@@ -359,10 +361,10 @@ public class VisualsActivity extends AppCompatActivity {
                     final int curCenterOffset = calculateOffset(myAmpDataLs.get(i));
                     //                    double f = mRand.nextDouble()*0.15+0.3;
                     //                    float y = (float) ( 10*(Math.sin(i*f+2) + mRand.nextDouble()*0.3));
-                    Log.d("visuals", "Curx: " + Long.toString(curX));
-                    Log.d("visuals", "First TimeStamp: " + Long.toString(firstTimeStamp));
-
-                    Log.d("visuals", "in for loop:x= " + Long.toString(x) + " y= " + Float.toString(curXd));
+//                    Log.d("visuals", "Curx: " + Long.toString(curX));
+//                    Log.d("visuals", "First TimeStamp: " + Long.toString(firstTimeStamp));
+//
+//                    Log.d("visuals", "in for loop:x= " + Long.toString(x) + " y= " + Float.toString(curXd));
                     if (!timestampArr.contains(x)) {
                         final long x2 = x;
                         runOnUiThread(new Runnable() {
@@ -406,18 +408,17 @@ public class VisualsActivity extends AppCompatActivity {
     }
 
     @Override
+    public void onPause() {
+        mHandler.removeCallbacks(mTimer1);
+//        mHandler.removeCallbacks(mTimer2);
+        super.onPause();
+    }
+
+    @Override
     public void onDestroy() {
         super.onDestroy();
         Log.d("visuals", "destroy is entered");
         timestampArr.clear();
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
 
-                int deletedRows = App.get().getDB().ampDataDAO().deleteTable();
-                Log.d("visuals", "deleted number of Rows: " + Integer.toString(deletedRows));
-
-            }
-        }).start();
     }
 }

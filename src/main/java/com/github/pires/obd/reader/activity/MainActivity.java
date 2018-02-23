@@ -412,7 +412,10 @@ public class MainActivity extends RoboActivity implements ObdProgressListener, L
         new Thread(new Runnable() {
             @Override
             public void run() {
-                App.get().getDB().ampDataDAO().deleteTable();
+
+                int deletedRows = App.get().getDB().ampDataDAO().deleteTable();
+                Log.d("visuals", "deleted number of Rows: " + Integer.toString(deletedRows));
+
             }
         }).start();
 
@@ -616,8 +619,10 @@ final String devemail = prefs.getString(ConfigActivity.DEV_EMAIL_KEY,null);
                 build.setMessage(getString(R.string.text_bluetooth_disabled));
                 return build.create();
             case NO_ORIENTATION_SENSOR:
-                build.setMessage(getString(R.string.text_no_orientation_sensor));
-                return build.create();
+                Log.d(TAG, "Orientation Warning turned off hard-coded");
+                return null;
+//                build.setMessage(getString(R.string.text_no_orientation_sensor));
+//                return build.create();
             case NO_GPS_SUPPORT:
                 build.setMessage(getString(R.string.text_no_gps_support));
                 return build.create();
