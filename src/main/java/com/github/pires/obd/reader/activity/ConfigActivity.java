@@ -201,7 +201,7 @@ public class ConfigActivity extends PreferenceActivity implements OnPreferenceCh
      */
         addPreferencesFromResource(R.xml.preferences);
 
-        checkGps();
+//        checkGps();
 
         ArrayList<CharSequence> pairedDeviceStrings = new ArrayList<>();
         ArrayList<CharSequence> vals = new ArrayList<>();

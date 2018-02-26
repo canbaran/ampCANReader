@@ -419,10 +419,10 @@ public class MainActivity extends RoboActivity implements ObdProgressListener, L
             }
         }).start();
 
-        if (mLocService != null) {
-            mLocService.removeGpsStatusListener(this);
-            mLocService.removeUpdates(this);
-        }
+//        if (mLocService != null) {
+//            mLocService.removeGpsStatusListener(this);
+//            mLocService.removeUpdates(this);
+//        }
 
         releaseWakeLockIfHeld();
         if (isServiceBound) {
@@ -547,7 +547,8 @@ public class MainActivity extends RoboActivity implements ObdProgressListener, L
         new Handler().post(mQueueCommands);
 
         if (prefs.getBoolean(ConfigActivity.ENABLE_GPS_KEY, false))
-            gpsStart();
+            Log.d(TAG, "GPS Info");
+            //gpsStart();
         else
             gpsStatusTextView.setText(getString(R.string.status_gps_not_used));
 
@@ -570,7 +571,7 @@ public class MainActivity extends RoboActivity implements ObdProgressListener, L
     private void stopLiveData() {
         Log.d(TAG, "Stopping live data..");
 
-        gpsStop();
+//        gpsStop();
 
         doUnbindService();
         endTrip();
@@ -786,23 +787,23 @@ final String devemail = prefs.getString(ConfigActivity.DEV_EMAIL_KEY,null);
         }
     }
 
-    private synchronized void gpsStart() {
-        if (!mGpsIsStarted && mLocProvider != null && mLocService != null && mLocService.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
-            mLocService.requestLocationUpdates(mLocProvider.getName(), getGpsUpdatePeriod(prefs), getGpsDistanceUpdatePeriod(prefs), this);
-            mGpsIsStarted = true;
-        } else if (mGpsIsStarted && mLocProvider != null && mLocService != null) {
-        } else {
-            gpsStatusTextView.setText(getString(R.string.status_gps_no_support));
-        }
-    }
+//    private synchronized void gpsStart() {
+//        if (!mGpsIsStarted && mLocProvider != null && mLocService != null && mLocService.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+//            mLocService.requestLocationUpdates(mLocProvider.getName(), getGpsUpdatePeriod(prefs), getGpsDistanceUpdatePeriod(prefs), this);
+//            mGpsIsStarted = true;
+//        } else if (mGpsIsStarted && mLocProvider != null && mLocService != null) {
+//        } else {
+//            gpsStatusTextView.setText(getString(R.string.status_gps_no_support));
+//        }
+//    }
 
-    private synchronized void gpsStop() {
-        if (mGpsIsStarted) {
-            mLocService.removeUpdates(this);
-            mGpsIsStarted = false;
-            gpsStatusTextView.setText(getString(R.string.status_gps_stopped));
-        }
-    }
+//    private synchronized void gpsStop() {
+//        if (mGpsIsStarted) {
+//            mLocService.removeUpdates(this);
+//            mGpsIsStarted = false;
+//            gpsStatusTextView.setText(getString(R.string.status_gps_stopped));
+//        }
+//    }
 
     /**
      * Uploading asynchronous task
