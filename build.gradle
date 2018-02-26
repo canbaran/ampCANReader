@@ -4,7 +4,7 @@ buildscript {
         google()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:3.0.0'
+        classpath 'com.android.tools.build:gradle:3.0.1'
     }
 }
 
@@ -25,19 +25,17 @@ repositories {
 }
 
 android {
-    compileSdkVersion 26 //22
+    compileSdkVersion 27 //22
     android.buildToolsVersion "26.0.2" // 23.0.1
     defaultConfig {
         minSdkVersion 14
-        targetSdkVersion 26
+        targetSdkVersion 27
         applicationId 'com.github.pires.obd.reader'
 //        multiDexEnabled true
     }
-
     lintOptions {
         abortOnError false
     }
-
     buildTypes {
         release {
             minifyEnabled false
@@ -52,32 +50,30 @@ android {
 //    packagingOptions {
 //        exclude "ViewCompat.class"
 //    }
-    buildToolsVersion '26.0.2'
+    buildToolsVersion '27.0.0'
+    productFlavors {
+    }
 }
 
 dependencies {
     annotationProcessor 'org.roboguice:roboblender:3.0.1'
-    compile 'com.android.support:appcompat-v7:26.1.0' //22.1.1
+    compile 'com.android.support:appcompat-v7:26.1.0'
+    //22.1.1
     compile 'com.github.pires:obd-java-api:1.0-RC14'
     compile 'org.roboguice:roboguice:3.+'
     provided 'org.roboguice:roboblender:3.+'
     compile 'com.squareup.retrofit:retrofit:1.9.0'
     compile 'com.amazonaws:aws-android-sdk-ddb:2.2.+'
     compile 'com.amazonaws:aws-android-sdk-ddb-mapper:2.2.+'
-//    compile 'com.android.support:recyclerview-v7:26.0.2'
+    //    compile 'com.android.support:recyclerview-v7:26.0.2'
     compile 'com.github.PhilJay:MPAndroidChart:v3.0.2'
     compile 'com.android.support.constraint:constraint-layout:1.0.2'
-
     annotationProcessor "android.arch.lifecycle:compiler:1.1.0"
     implementation 'android.arch.persistence.room:runtime:1.0.0'
     annotationProcessor 'android.arch.persistence.room:compiler:1.0.0'
-
-
-//    debugCompile 'com.amitshekhar.android:debug-db:1.0.3'
-//    compile 'com.android.support.constraint:constraint-layout:1.0.2'
-//    compile 'com.android.support:multidex:1.0.1'
-
-
+    //    debugCompile 'com.amitshekhar.android:debug-db:1.0.3'
+    //    compile 'com.android.support.constraint:constraint-layout:1.0.2'
+    //    compile 'com.android.support:multidex:1.0.1'
 }
 
 

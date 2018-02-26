@@ -469,7 +469,7 @@ public class MainActivity extends RoboActivity implements ObdProgressListener, L
             preRequisites = btAdapter.enable();
         }
 
-        gpsInit();
+//        gpsInit();
         if (!preRequisites) {
             showDialog(BLUETOOTH_DISABLED);
             btStatusTextView.setText(getString(R.string.status_bluetooth_disabled));

@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest
+
     xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.github.pires.obd.reader"
     android:versionCode="13"
@@ -10,10 +11,16 @@
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
-    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
-    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
-    <uses-permission android:name="android.permission.ACCESS_LOCATION_EXTRA_COMMANDS" />
+    <!--<uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />-->
+    <!--<uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />-->
+    <!--<uses-permission android:name="android.permission.ACCESS_LOCATION_EXTRA_COMMANDS" />-->
     <uses-permission android:name="android.permission.READ_LOGS" />
+
+
+    <!--<uses-sdk android:minSdkVersion="19"-->
+        <!--android:targetSdkVersion="24"-->
+        <!--android:maxSdkVersion="27" />-->
+
 
     <application
         android:name=".App"
