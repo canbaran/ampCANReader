@@ -34,6 +34,7 @@ import java.util.Random;
 import roboguice.activity.RoboActivity;
 
 import static com.github.pires.obd.reader.trips.TripLog.DATABASE_NAME;
+import static java.lang.Math.round;
 
 /**
  * Created by canbaran on 2/14/18.
@@ -44,11 +45,13 @@ public class VisualsActivity extends AppCompatActivity {
     private LineChart mChartCenterOffset;
     private LineChart mChartCurvature;
     private ArrayList<LineChart> chartArr = new ArrayList<LineChart>();
+//    private long upperTimeStamp = 0;
+//    private long lowerTimeStamp = 0;
 
     private Runnable mTimer1;
     private final Handler mHandler = new Handler();
     private long createSystemTime;
-    private ArrayList<Long> timestampArr = new ArrayList<>();
+    private ArrayList<Float> timestampArr = new ArrayList<>();
 //    private Pusher pusher;
 //
 //    private static final String PUSHER_APP_KEY = "<INSERT_PUSHER_KEY>";
@@ -304,6 +307,8 @@ public class VisualsActivity extends AppCompatActivity {
 
     private void addEntry(float x, float y, LineChart relevantChart, String labelInfo) {
         LineData data = relevantChart.getData();
+
+
         //todo dont label every point
         //todo how often do we get an error from the steering unit
         //todo how many times does the power steering have a fault
@@ -317,28 +322,36 @@ public class VisualsActivity extends AppCompatActivity {
         if (data != null) {
             ILineDataSet set = data.getDataSetByIndex(0);
 
+
+
             if (set == null) {
                 set = createSet(labelInfo);
                 data.addDataSet(set);
             }
 
-//            ILineDataSet test = new ILineDataSet();
-//
-//            if ( data ) {
-//
-//            }
+            Entry myCurrentEntry = new Entry( x, y); //should be x on the x place
 
-            data.addEntry(new Entry(x, y), 0);
+            if( !set.contains(  myCurrentEntry ) ) {
+                Log.d("visuals", "Cur Timestamp: " + Float.toString(x));
 
-            // let the chart know it's data has changed
-            data.notifyDataChanged();
-            relevantChart.notifyDataSetChanged();
 
-            // limit the number of visible entries
-            relevantChart.setVisibleXRangeMaximum(75); //todo this needs to be increased 75
+                data.addEntry(myCurrentEntry, 0);
+                Log.d("visuals", "just added Entry");
+                Log.d("visuals", "Max X entry:" + Float.toString(data.getXMax()));
 
-            // move to the latest entry
-            relevantChart.moveViewToX(data.getXMax()); //data.getEntryCount()
+                // let the chart know it's data has changed
+                data.notifyDataChanged();
+                relevantChart.notifyDataSetChanged();
+
+                // limit the number of visible entries
+                relevantChart.setVisibleXRangeMaximum(75);
+
+                // move to the latest entry
+                relevantChart.moveViewToX(data.getXMax()); //data.getEntryCount()
+            } else {
+                Log.d("visuals", "data already in the set");
+            }
+
         }
     }
 
@@ -347,44 +360,74 @@ public class VisualsActivity extends AppCompatActivity {
         List<ampData> temp = App.get().getDB().ampDataDAO().findByFirstTimestamp();
         if (temp.size() > 0) {
             firstTimeStamp = temp.get(0).getTimestamp();
-//            Log.d("visuals", Long.toString(firstTimeStamp));
+
+            Log.d("visuals", "first timestamp: " + Long.toString(firstTimeStamp));
+            //get the highest X point on the chart
+//            float highestX = getHighestXPoint();
+//            Log.d("visuals", "highest X Point: " + Float.toString(highestX));
             long previousTimeStamp = firstTimeStamp;
-//            LineData curLineData = mChartXd.getLineData();
-//            long curHighestTimePoint = (long) curLineData.getXMax();
-            List<ampData> myAmpDataLs = App.get().getDB().ampDataDAO().findByTimeStampInterval(System.currentTimeMillis() - 15 * 1000, System.currentTimeMillis()); //
-            for (int i = 0; i < myAmpDataLs.size(); i++) {
+//            Log.d("visuals", "Lower TimeStamp:" + Long.toString(firstTimeStamp+ (long) highestX));
+//            Log.d("visuals", "Upper TimeStamp:" + Long.toString(System.currentTimeMillis()));
+
+            List<ampData> myAmpDataLs = App.get().getDB().ampDataDAO().findByTimeStampInterval(System.currentTimeMillis()-5*1000, System.currentTimeMillis()); //firstTimeStamp+ (long) highestX
+//            long arrayFirstTS = myAmpDataLs.get(0).getTimestamp();
+//            long arrayLastTS = myAmpDataLs.get(myAmpDataLs.size()-1).getTimestamp();
+
+//            Log.d("Visuals", "Array First TimeStamp: " + Long.toString(arrayFirstTS));
+//            Log.d("Visuals", "Array Last TimeStamp: " + Long.toString(arrayLastTS));
+
+
+            Log.d("visuals", "Size of the Array received from DB: " + Integer.toString(myAmpDataLs.size()));
+            for (int i = 0; i < myAmpDataLs.size();  i++) { //
                 Long curX = myAmpDataLs.get(i).getTimestamp(); //- firstTimeStamp ) / 1000;
-                if (curX - previousTimeStamp > 100) { //do it at 10hz not 2hz
-                    long x = (curX - firstTimeStamp) / 1000;
+                if (curX - previousTimeStamp > 0) {
+//                    long x = (curX - firstTimeStamp) / 1000;
+                    float x =  (float) (myAmpDataLs.get(i).getTimestamp() - firstTimeStamp )/1000;
                     final int curXd = myAmpDataLs.get(i).getXD();
                     final int curCurvature = myAmpDataLs.get(i).getCurve();
                     final int curCenterOffset = calculateOffset(myAmpDataLs.get(i));
-                    //                    double f = mRand.nextDouble()*0.15+0.3;
-                    //                    float y = (float) ( 10*(Math.sin(i*f+2) + mRand.nextDouble()*0.3));
-//                    Log.d("visuals", "Curx: " + Long.toString(curX));
-//                    Log.d("visuals", "First TimeStamp: " + Long.toString(firstTimeStamp));
-//
-//                    Log.d("visuals", "in for loop:x= " + Long.toString(x) + " y= " + Float.toString(curXd));
-                    if (!timestampArr.contains(x)) {
-                        final long x2 = x;
-                        runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                addEntry(x2, curXd, mChartXd, "Xd");
-                                addEntry(x2, curCenterOffset, mChartCenterOffset, "CenterOffset");
-                                addEntry(x2, curCurvature, mChartCurvature, "Curvature");
-                            }
-                        });
-                        timestampArr.add(x);
-                    }
+
+
+    //                Log.d("visuals", "Current TimeStamp: " + Long.toString(x));
+    //
+    //                    Log.d("visuals", "in for loop:x= " + Long.toString(x) + " y= " + Float.toString(curXd));
+                        if (!timestampArr.contains(x)) {
+
+                            final float x2 = x;
+
+                            runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    addEntry(x2, curXd, mChartXd, "Xd");
+                                    addEntry(x2, curCenterOffset, mChartCenterOffset, "CenterOffset");
+                                    addEntry(x2, curCurvature, mChartCurvature, "Curvature");
+                                }
+                            });
+                            timestampArr.add(x);
+                        }
                     previousTimeStamp = curX;
                 }
             }
+
         }
 
     }
 
-        @Override
+    private float getHighestXPoint() {
+        LineData data = mChartXd.getData();
+        if (data != null) {
+            ILineDataSet set = data.getDataSetByIndex(0);
+            if (set == null) {
+                return 0;
+            } else {
+                return set.getXMax()*1000;
+            }
+        } else return 0;
+
+
+    }
+
+    @Override
     public void onResume() {
         super.onResume();  // Always call the superclass method first
         mTimer1 = new Runnable() {
@@ -400,17 +443,16 @@ public class VisualsActivity extends AppCompatActivity {
                     }
                 }).start();
 
-                mHandler.postDelayed(this, 300);
+                mHandler.postDelayed(this, 1000);
             }
         };
-        mHandler.postDelayed(mTimer1, 300);
+        mHandler.postDelayed(mTimer1, 1000);
 
     }
 
     @Override
     public void onPause() {
         mHandler.removeCallbacks(mTimer1);
-//        mHandler.removeCallbacks(mTimer2);
         super.onPause();
     }
 

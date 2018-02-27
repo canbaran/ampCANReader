@@ -154,7 +154,7 @@ public class writerThread extends Thread {
                     curData.setTimeStamp(curTimeStamp);
 //                    displayEverything(curData);
                     curData.setVIN(vehicleID);
-                    storeSingleInternally( curData );
+//                    storeSingleInternally( curData );
 //                    canDataLs.remove(i);
 //                    canDataLs.add(curData);
                 }
@@ -187,19 +187,19 @@ public class writerThread extends Thread {
         return data;
     }
 
-    private void storeSingleInternally( can_data curCanData ) {
-        ampData curAmpData = new ampData();
-        curAmpData.setCommandTorque(curCanData.getCommandTorque());
-        curAmpData.setCurve(curCanData.getCurve());
-        curAmpData.setXD(curCanData.getXD());
-        curAmpData.setRLD(curCanData.getRLD());
-        curAmpData.setLLD(curCanData.getLLD());
-        curAmpData.setTError(curCanData.getTError());
-        curAmpData.setUserTorque(curCanData.getUserTorque());
-        curAmpData.setTotalTorque(curCanData.getTotalTorque());
-        curAmpData.setTimestamp(curCanData.getTimeStamp());
-        App.get().getDB().ampDataDAO().insertAll(curAmpData);
-    }
+//    private void storeSingleInternally( can_data curCanData ) {
+//        ampData curAmpData = new ampData();
+//        curAmpData.setCommandTorque(curCanData.getCommandTorque());
+//        curAmpData.setCurve(curCanData.getCurve());
+//        curAmpData.setXD(curCanData.getXD());
+//        curAmpData.setRLD(curCanData.getRLD());
+//        curAmpData.setLLD(curCanData.getLLD());
+//        curAmpData.setTError(curCanData.getTError());
+//        curAmpData.setUserTorque(curCanData.getUserTorque());
+//        curAmpData.setTotalTorque(curCanData.getTotalTorque());
+//        curAmpData.setTimestamp(curCanData.getTimeStamp());
+//        App.get().getDB().ampDataDAO().insertAll(curAmpData);
+//    }
 
     @NonNull
     private can_data readDataFromElm() {

@@ -95,7 +95,7 @@ public class readerThread extends Thread {
                         ArrayList<can_data> cleanArr = removeDuplicateTs(canDataLs);
                         Long a = System.currentTimeMillis();
                         try {
-//                            storeInternal(cleanArr);
+                            storeInternal(cleanArr);
                             mapper.batchSave(cleanArr);
                             myService.setBatchCount( myService.getBatchCount() + cleanArr.size());
                             //right at thos moment store cleanArr to our internal db as well
@@ -146,36 +146,39 @@ public class readerThread extends Thread {
             return (int) (c1.getTimeStamp()-c2.getTimeStamp());
         }
     }
-//    private void storeInternal(ArrayList<can_data> cleanArr) {
+    private void storeInternal(ArrayList<can_data> cleanArr) {
 //        List<ampData> list = new ArrayList<>();
-//        Log.d(TAG, "about to store internally an array of size: " + Integer.toString(cleanArr.size()));
-//        for (int i = 0; i < cleanArr.size(); i++) {
-//            ampData curAmpData = new ampData();
-//
-//            can_data curCanData = cleanArr.get(i);
-//
-//            curAmpData.setCommandTorque(curCanData.getCommandTorque());
-//            curAmpData.setCurve(curCanData.getCurve());
-//            curAmpData.setXD(curCanData.getXD());
-//            curAmpData.setRLD(curCanData.getRLD());
-//            curAmpData.setLLD(curCanData.getLLD());
-////            curAmpData.setTAngle(curCanData.getTAngle());
-//            curAmpData.setTError(curCanData.getTError());
-//            curAmpData.setUserTorque(curCanData.getUserTorque());
-//            curAmpData.setTotalTorque(curCanData.getTotalTorque());
-//            curAmpData.setTimestamp(curCanData.getTimeStamp());
-//
-//            list.add(curAmpData);
-//        }
-//
-//        // insert product list into database
-////        MyDatabase db = ((MainActivity) ctxUi).getDB();
-//        App.get().getDB().ampDataDAO().insertAll(list);
-////        List<ampData> test = db.ampDataDAO().getAll();
-//
-//        // disable flag for force update
-////        App.get().setForceUpdate(false);
-//    }
+        ampData[] list = new ampData[cleanArr.size()];
+
+        Log.d(TAG, "about to store internally an array of size: " + Integer.toString(cleanArr.size()));
+        for (int i = 0; i < cleanArr.size(); i++) {
+            ampData curAmpData = new ampData();
+
+            can_data curCanData = cleanArr.get(i);
+            Log.d(TAG, "Reader Thread Timestamp: " + Long.toString(curCanData.getTimeStamp()));
+
+            curAmpData.setCommandTorque(curCanData.getCommandTorque());
+            curAmpData.setCurve(curCanData.getCurve());
+            curAmpData.setXD(curCanData.getXD());
+            curAmpData.setRLD(curCanData.getRLD());
+            curAmpData.setLLD(curCanData.getLLD());
+//            curAmpData.setTAngle(curCanData.getTAngle());
+            curAmpData.setTError(curCanData.getTError());
+            curAmpData.setUserTorque(curCanData.getUserTorque());
+            curAmpData.setTotalTorque(curCanData.getTotalTorque());
+            curAmpData.setTimestamp(curCanData.getTimeStamp());
+
+            list[i] = curAmpData;
+        }
+
+        // insert product list into database
+//        MyDatabase db = ((MainActivity) ctxUi).getDB();
+        App.get().getDB().ampDataDAO().insertAll(list);
+//        List<ampData> test = db.ampDataDAO().getAll();
+
+        // disable flag for force update
+//        App.get().setForceUpdate(false);
+    }
 
 
 }

@@ -21,7 +21,7 @@ public interface ampDataDAO {
     @Query("SELECT * FROM ampData order by timestamp asc limit 1")
     List<ampData> findByFirstTimestamp();
 
-    @Query("SELECT * FROM ampData WHERE timestamp >= :t1 and timestamp <= :t2 order by timestamp asc")
+    @Query("SELECT * FROM ampData WHERE timestamp > :t1 and timestamp <= :t2 order by timestamp asc")
     List<ampData> findByTimeStampInterval(Long t1, Long t2);
 
     @Query("DELETE FROM ampData")
