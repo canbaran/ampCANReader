@@ -120,9 +120,6 @@ public class writerThread extends Thread {
                 //read from Elm
                 ArrayList<can_data> canDataLs = new ArrayList<can_data>();
 
-//                byte[][] curCanData = new byte[blockSize][];
-//                List<byte[]> curCanData = new ArrayList<>();
-
                 loopStartTimeStamp = System.currentTimeMillis();
                 Long a = System.nanoTime();
 
@@ -145,27 +142,20 @@ public class writerThread extends Thread {
                         }
                     });
                 }
-                Long b = System.nanoTime();
-                long avgTimeMillis = (b-a)/(canDataLs.size()*1000000);
-                for (int i=0; i<canDataLs.size(); i++) {
-                    can_data curData = canDataLs.get(i);
-                    Long curTimeStamp = loopStartTimeStamp+i*avgTimeMillis;
+                if ( canDataLs.size() > 0 ) {
+                    Long b = System.nanoTime();
+                    long avgTimeMillis = (b - a) / (canDataLs.size() * 1000000);
+                    for (int i = 0; i < canDataLs.size(); i++) {
+                        can_data curData = canDataLs.get(i);
+                        Long curTimeStamp = loopStartTimeStamp + i * avgTimeMillis;
 
-                    curData.setTimeStamp(curTimeStamp);
-//                    displayEverything(curData);
-                    curData.setVIN(vehicleID);
+                        curData.setTimeStamp(curTimeStamp);
+                        curData.setVIN(vehicleID);
 //                    storeSingleInternally( curData );
-//                    canDataLs.remove(i);
-//                    canDataLs.add(curData);
+                    }
+                    Log.d(TAG, Integer.toString(blockSize) + " points produced: " + Long.toString((b - a) / (blockSize * 1000000)) + " [ms] per point");
+                    writeToReaderThread(canDataLs);
                 }
-                Log.d(TAG, Integer.toString(blockSize) + " points produced: " + Long.toString( (b-a) / (blockSize*1000000) ) + " [ms] per point" );
-//                ((MainActivity) ctxUi).runOnUiThread(new Runnable() {
-//                    @Override
-//                    public void run() {
-//                        ((MainActivity) ctxUi).canBUSUpdate("SUpdate", "Status Update", "block ready to be sent to the Reader" );
-//                    }
-//                });
-                writeToReaderThread(canDataLs);
             }
 
 
