@@ -178,37 +178,13 @@ public class VisualsActivity extends AppCompatActivity {
             centerOffset = LLDTarget - curLLD;
         } else if (RLDTarget > 0) {
             centerOffset = curRLD - RLDTarget;
-        } else {
+        } else if( (curLLD==255)&&(curRLD==255) ) {
             centerOffset = -20;
         }
+        else {
+            centerOffset = 20;
+        }
 
-//        LLDTarget = 0;
-//        RLDTarget = 0;
-//        if((LLD!=255)&&(LLD>2)){
-//            if((RLD!=255)&&(RLD>2)){
-//                if(RLD<40){
-//                    LLDTarget= (unsigned char)(LLD+RLD)/2;
-//                }
-//                else {
-//                    LLDTarget = (unsigned char)(LLD+40)/2;
-//                }
-//            }
-//            else {
-//                LLDTarget = 35;
-//            }
-//        }
-//        else if((RLD!=255)&&(RLD>2)){
-//            RLDTarget = 32;
-//        }
-//
-//
-//
-//        if(LLDTarget)
-//            center_offset = LLDTarget-LLD;  // this is our error in our position control loop
-//        else if(RLDTarget)
-//            center_offset = RLD-RLDTarget;
-//        else
-//... no lanes.
         return centerOffset;
     }
     private void setupChart(LineChart curChart) {
