@@ -320,7 +320,7 @@ public class VisualsActivity extends AppCompatActivity {
                 relevantChart.notifyDataSetChanged();
 
                 // limit the number of visible entries
-//                relevantChart.setVisibleXRangeMaximum(30);
+                relevantChart.setVisibleXRangeMaximum(75);
 
                 // move to the latest entry
                 relevantChart.moveViewToX(data.getXMax()); //data.getEntryCount()
