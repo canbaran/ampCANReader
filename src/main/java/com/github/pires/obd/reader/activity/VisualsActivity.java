@@ -322,7 +322,7 @@ public class VisualsActivity extends AppCompatActivity {
                 relevantChart.notifyDataSetChanged();
 
                 // limit the number of visible entries
-                relevantChart.setVisibleXRangeMaximum(5);
+                relevantChart.setVisibleXRangeMaximum(15);
 
 //                relevantChart.setVisibleXRange((float) (x-2.5*1000), (float) (x+2.5*1000));
                 Log.d("visuals", "current x:" + Float.toString(x));
