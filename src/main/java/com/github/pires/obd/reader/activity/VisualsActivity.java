@@ -369,16 +369,16 @@ public class VisualsActivity extends AppCompatActivity {
     //                    Log.d("visuals", "in for loop:x= " + Long.toString(x) + " y= " + Float.toString(curXd));
 //                        if (!timestampArr.contains(x)) {
 
-                            final float x2 = x;
+                    final float x2 = x;
 
-                        runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                addEntry(x2, curXd, mChartXd, "Xd");
-                                addEntry(x2, curCenterOffset, mChartCenterOffset, "CenterOffset");
-                                addEntry(x2, curCurvature, mChartCurvature, "Curvature");
-                            }
-                        });
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            addEntry(x2, curXd, mChartXd, "Xd");
+                            addEntry(x2, curCenterOffset, mChartCenterOffset, "CenterOffset");
+                            addEntry(x2, curCurvature, mChartCurvature, "Curvature");
+                        }
+                    });
 //                            timestampArr.add(x);
 //                        }
                     ampData curAmpData = myAmpDataLs.get(i);
@@ -422,7 +422,7 @@ public class VisualsActivity extends AppCompatActivity {
                     }
                 }).start();
 
-                mHandler.postDelayed(this, 500);
+                mHandler.postDelayed(this, 1000);
             }
         };
         mHandler.postDelayed(mTimer1, 1000);
