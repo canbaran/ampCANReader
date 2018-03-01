@@ -228,7 +228,7 @@ public class VisualsActivity extends AppCompatActivity {
         leftAxis.removeAllLimitLines();
 //        leftAxis.addLimitLine(ll);
         // limit lines are drawn behind data (and not on top)
-        leftAxis.setDrawLimitLinesBehindData(true);
+//        leftAxis.setDrawLimitLinesBehindData(true);
     }
 
     private void setupData(LineChart curChart, int relevantColor ) {
@@ -285,6 +285,7 @@ public class VisualsActivity extends AppCompatActivity {
         LineData data = relevantChart.getData();
 
 
+
         //todo dont label every point
         //todo how often do we get an error from the steering unit
         //todo how many times does the power steering have a fault
@@ -297,6 +298,7 @@ public class VisualsActivity extends AppCompatActivity {
 
         if (data != null) {
             ILineDataSet set = data.getDataSetByIndex(0);
+
 
 
 
@@ -320,7 +322,11 @@ public class VisualsActivity extends AppCompatActivity {
                 relevantChart.notifyDataSetChanged();
 
                 // limit the number of visible entries
-                relevantChart.setVisibleXRangeMaximum(75);
+                relevantChart.setVisibleXRangeMaximum(5);
+
+//                relevantChart.setVisibleXRange((float) (x-2.5*1000), (float) (x+2.5*1000));
+                Log.d("visuals", "current x:" + Float.toString(x));
+                Log.d("visuals", "Xaxis Range: " + Float.toString(relevantChart.getXAxis().mAxisRange));
 
                 // move to the latest entry
                 relevantChart.moveViewToX(data.getXMax()); //data.getEntryCount()
@@ -345,7 +351,7 @@ public class VisualsActivity extends AppCompatActivity {
 //            Log.d("visuals", "Lower TimeStamp:" + Long.toString(firstTimeStamp+ (long) highestX));
 //            Log.d("visuals", "Upper TimeStamp:" + Long.toString(System.currentTimeMillis()));
 
-            List<ampData> myAmpDataLs = App.get().getDB().ampDataDAO().findByTimeStampInterval(firstTimeStamp, System.currentTimeMillis()); //firstTimeStamp+ (long) highestX
+            List<ampData> myAmpDataLs = App.get().getDB().ampDataDAO().findByTimeStampInterval(System.currentTimeMillis()-2*1000, System.currentTimeMillis()); //firstTimeStamp+ (long) highestX
 //            long arrayFirstTS = myAmpDataLs.get(0).getTimestamp();
 //            long arrayLastTS = myAmpDataLs.get(myAmpDataLs.size()-1).getTimestamp();
 
@@ -356,7 +362,8 @@ public class VisualsActivity extends AppCompatActivity {
             Log.d("visuals", "Size of the Array received from DB: " + Integer.toString(myAmpDataLs.size()));
             for (int i = 0; i < myAmpDataLs.size();  i++) { //
                 Long curX = myAmpDataLs.get(i).getTimestamp(); //- firstTimeStamp ) / 1000;
-                if (curX - previousTimeStamp > 0) {
+
+                if (curX - previousTimeStamp > 100) {
 //                    long x = (curX - firstTimeStamp) / 1000;
                     float x =  (float) (myAmpDataLs.get(i).getTimestamp() - firstTimeStamp )/1000;
                     final int curXd = myAmpDataLs.get(i).getXD();
@@ -381,11 +388,11 @@ public class VisualsActivity extends AppCompatActivity {
                     });
 //                            timestampArr.add(x);
 //                        }
-                    ampData curAmpData = myAmpDataLs.get(i);
-                    curAmpData.setIsPlotted(true);
-                    App.get().getDB().ampDataDAO().update(curAmpData);
                     previousTimeStamp = curX;
                 }
+                ampData curAmpData = myAmpDataLs.get(i);
+                curAmpData.setIsPlotted(true);
+                App.get().getDB().ampDataDAO().update(curAmpData);
             }
 
         }

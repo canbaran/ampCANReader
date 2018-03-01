@@ -204,22 +204,12 @@ public class writerThread extends Thread {
 
         while( myService.isRunning() ) {
             try {
-//                ((MainActivity) ctxUi).runOnUiThread(new Runnable() {
-//                    @Override
-//                    public void run() {
-//                        ((MainActivity) ctxUi).canBUSUpdate(elmDeviceStatus, elmDeviceStatus, "About to Read from ELM" );
-//                    }
-//                });
+
                 b = (byte) elmInputStream.read();
-//                ((MainActivity) ctxUi).runOnUiThread(new Runnable() {
-//                    @Override
-//                    public void run() {
-//                        ((MainActivity) ctxUi).canBUSUpdate(elmDeviceStatus, elmDeviceStatus, "Read Success" );
-//                    }
-//                });
+
             } catch (Exception e) {
                 e.printStackTrace();
-                final String eMessage =e.getMessage();
+//                final String eMessage =e.getMessage();
 //                ((MainActivity) ctxUi).runOnUiThread(new Runnable() {
 //                    @Override
 //                    public void run() {
@@ -284,6 +274,7 @@ public class writerThread extends Thread {
                                     ((MainActivity) ctxUi).incrementRowVal("MessageIncompleteErrors", "Message Incomplete Errors", "1");
                                 }
                             });
+                            Log.d(TAG, "Example incomplete: " + byteData);
                         }
                     }
                     res.delete(0, res.length());
