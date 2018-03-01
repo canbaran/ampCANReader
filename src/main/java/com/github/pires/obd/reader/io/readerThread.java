@@ -167,6 +167,7 @@ public class readerThread extends Thread {
             curAmpData.setUserTorque(curCanData.getUserTorque());
             curAmpData.setTotalTorque(curCanData.getTotalTorque());
             curAmpData.setTimestamp(curCanData.getTimeStamp());
+            curAmpData.setIsPlotted(false);
 
             list[i] = curAmpData;
         }

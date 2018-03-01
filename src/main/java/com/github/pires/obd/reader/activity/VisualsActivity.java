@@ -320,7 +320,7 @@ public class VisualsActivity extends AppCompatActivity {
                 relevantChart.notifyDataSetChanged();
 
                 // limit the number of visible entries
-                relevantChart.setVisibleXRangeMaximum(75);
+//                relevantChart.setVisibleXRangeMaximum(30);
 
                 // move to the latest entry
                 relevantChart.moveViewToX(data.getXMax()); //data.getEntryCount()
@@ -345,7 +345,7 @@ public class VisualsActivity extends AppCompatActivity {
 //            Log.d("visuals", "Lower TimeStamp:" + Long.toString(firstTimeStamp+ (long) highestX));
 //            Log.d("visuals", "Upper TimeStamp:" + Long.toString(System.currentTimeMillis()));
 
-            List<ampData> myAmpDataLs = App.get().getDB().ampDataDAO().findByTimeStampInterval(System.currentTimeMillis()-5*1000, System.currentTimeMillis()); //firstTimeStamp+ (long) highestX
+            List<ampData> myAmpDataLs = App.get().getDB().ampDataDAO().findByTimeStampInterval(firstTimeStamp, System.currentTimeMillis()); //firstTimeStamp+ (long) highestX
 //            long arrayFirstTS = myAmpDataLs.get(0).getTimestamp();
 //            long arrayLastTS = myAmpDataLs.get(myAmpDataLs.size()-1).getTimestamp();
 
@@ -367,20 +367,23 @@ public class VisualsActivity extends AppCompatActivity {
     //                Log.d("visuals", "Current TimeStamp: " + Long.toString(x));
     //
     //                    Log.d("visuals", "in for loop:x= " + Long.toString(x) + " y= " + Float.toString(curXd));
-                        if (!timestampArr.contains(x)) {
+//                        if (!timestampArr.contains(x)) {
 
                             final float x2 = x;
 
-                            runOnUiThread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    addEntry(x2, curXd, mChartXd, "Xd");
-                                    addEntry(x2, curCenterOffset, mChartCenterOffset, "CenterOffset");
-                                    addEntry(x2, curCurvature, mChartCurvature, "Curvature");
-                                }
-                            });
-                            timestampArr.add(x);
-                        }
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                addEntry(x2, curXd, mChartXd, "Xd");
+                                addEntry(x2, curCenterOffset, mChartCenterOffset, "CenterOffset");
+                                addEntry(x2, curCurvature, mChartCurvature, "Curvature");
+                            }
+                        });
+//                            timestampArr.add(x);
+//                        }
+                    ampData curAmpData = myAmpDataLs.get(i);
+                    curAmpData.setIsPlotted(true);
+                    App.get().getDB().ampDataDAO().update(curAmpData);
                     previousTimeStamp = curX;
                 }
             }
@@ -419,7 +422,7 @@ public class VisualsActivity extends AppCompatActivity {
                     }
                 }).start();
 
-                mHandler.postDelayed(this, 1000);
+                mHandler.postDelayed(this, 500);
             }
         };
         mHandler.postDelayed(mTimer1, 1000);

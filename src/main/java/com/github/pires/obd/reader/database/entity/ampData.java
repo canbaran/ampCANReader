@@ -166,6 +166,16 @@ public class ampData {
         this.totalTorque = totalTorque;
     }
 
+    @ColumnInfo(name = "IsPlotted")
+    private boolean IsPlotted;
+    public boolean getIsPlotted() {
+        return IsPlotted;
+    }
+    public void setIsPlotted( boolean IsPlotted ) {
+        this.IsPlotted = IsPlotted;
+    }
+
+
 
 
 }
