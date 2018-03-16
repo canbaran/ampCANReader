@@ -23,6 +23,7 @@ import com.github.pires.obd.reader.database.entity.ampData;
 
 import static android.content.ContentValues.TAG;
 import static com.github.pires.obd.reader.io.uiNotificationIds.awsUploadStatus;
+import static java.lang.Math.round;
 
 /**
  * Created by canbaran on 12/21/17.
@@ -36,6 +37,7 @@ public class readerThread extends Thread {
         private Context appContext;
         private Context ctxUi;
         private ObdGatewayService myService;
+        private long startTime;
 
 //        private CognitoCachingCredentialsProvider credentialsProvider = new CognitoCachingCredentialsProvider(
 //                getApplicationContext(),
@@ -45,12 +47,14 @@ public class readerThread extends Thread {
 //        private AmazonDynamoDBClient ddbClient = new AmazonDynamoDBClient(credentialsProvider);
 
         public readerThread(BlockingQueue<ArrayList<can_data>> incomingQ, Context context, Context ctx2,
-                            ObdGatewayService myIncomingService)
+                            ObdGatewayService myIncomingService,
+                            long incomingStartTime)
         {
             myQ = incomingQ;
             appContext = context;
             ctxUi = ctx2;
             myService = myIncomingService;
+            startTime = incomingStartTime;
         }
 
         public void run()
@@ -104,7 +108,8 @@ public class readerThread extends Thread {
                             e.printStackTrace();
                         }
                         Long b = System.currentTimeMillis();
-                        final String submissionStatus2 = "# of Blocks Sent:" + Integer.toString(myService.getBatchCount());
+                        double elapsedTime = (b-startTime)/1e3;
+                        final String submissionStatus2 = Double.toString(round( myService.getBatchCount()  / elapsedTime ) );
                         ((MainActivity) ctxUi).runOnUiThread(new Runnable() {
                             @Override
                             public void run() {

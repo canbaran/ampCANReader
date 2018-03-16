@@ -57,6 +57,7 @@ public class writerThread extends Thread {
     private int messageLengthWithID = 19;
     private int indexKey;
     private int numOfBytes;
+    private long startTime;
 //    private int numberOfMessages = 0;
 //    private int numberOfBufferFullErrors = 0;
 
@@ -83,6 +84,7 @@ public class writerThread extends Thread {
         IDArray = incomingIDArr;
         indexKey = incomingIndexKey;
         numOfBytes = incomingNumOfBytes;
+
 
 //        hdForUi = hd;
     }

@@ -98,6 +98,7 @@ public class ObdGatewayService extends AbstractGatewayService {
     private String CM = "";
     private String CF = "";
     private String CMEnum = "";
+    private long startTime;
     //
     DynamoDBMapper mapper;
     private ArrayList<String> noUpdateList = new ArrayList<String>();
@@ -108,6 +109,7 @@ public class ObdGatewayService extends AbstractGatewayService {
 
     public void startService() throws IOException {
         Log.d(TAG, "Starting service..");
+        startTime = System.currentTimeMillis();
 
         noUpdateList.add("Reset OBD");
         noUpdateList.add("Format Off");
@@ -333,7 +335,8 @@ public class ObdGatewayService extends AbstractGatewayService {
                         for (int i=0; i<threadCount; i++ ) {
                             readerThread readerThread = new readerThread(queue, getApplicationContext(),
                                     ctx,
-                                    this);
+                                    this,
+                                    startTime);
                             readerThread.setName("Uploader Thread " + Integer.toString(i));
                             tLS.add(readerThread);
                         }
@@ -348,7 +351,8 @@ public class ObdGatewayService extends AbstractGatewayService {
                                 this,
                                 IDArr,
                                 indexKey,
-                                Integer.parseInt(CMEnum)*8);
+                                Integer.parseInt(CMEnum)*8
+                                );
                         writerThread.setName("Writer Thread");
 
 
