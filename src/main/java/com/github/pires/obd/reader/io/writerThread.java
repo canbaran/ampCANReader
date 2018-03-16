@@ -516,12 +516,12 @@ public class writerThread extends Thread {
 
     private void displayOnUi(final String variableName, final String variableValue, int speed) {
         if ( speed >= thresholdSpeed ) {
-//            ((MainActivity) ctxUi).runOnUiThread(new Runnable() {
-//                @Override
-//                public void run() {
-//                    ((MainActivity) ctxUi).canBUSUpdate(variableName, variableName, variableValue);
-//                }
-//            });
+            ((MainActivity) ctxUi).runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    ((MainActivity) ctxUi).canBUSUpdate(variableName, variableName, variableValue);
+                }
+            });
         }
     }
     private int signConversion(int x, int bits) {
