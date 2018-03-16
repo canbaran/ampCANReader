@@ -127,9 +127,10 @@ public class writerThread extends Thread {
 
                 for( int i=0; i<blockSize; i++){
                     can_data curData = readDataFromElm();
-                    if (curData == null) {
-                        Log.d(TAG, "Exited the inner data collector for loop");
-                        break;
+                    if (curData == null && !myService.isRunning()) {
+                        return;
+//                        Log.d(TAG, "Exited the inner data collector for loop");
+//                        break;
                     }
                     //if stationary dont log
                     if ( curData.getSpeed() >= thresholdSpeed ) {
@@ -211,17 +212,17 @@ public class writerThread extends Thread {
 
             } catch (Exception e) {
                 e.printStackTrace();
-//                final String eMessage =e.getMessage();
-//                ((MainActivity) ctxUi).runOnUiThread(new Runnable() {
-//                    @Override
-//                    public void run() {
-//                        ((MainActivity) ctxUi).canBUSUpdate(elmDeviceStatus, elmDeviceStatus, "Read Success" );
-//                    }
-//                });
-                return null;
+                if (!myService.isRunning()) {
+                    return null;
+                } else {
+                    //try to re-establish bluetooth connection and set up the elm
+                    reattemptAndSetUpElm();
+                }
+
+
             }
             c = (char) b;
-            if (c == '>' || c == '<' || c == '\r') // read until '>' arrives
+            if (c == '>' || c == '<' || c == '\r')
             {
 //                if (!res.toString().equals("DATA ERROR")) {
                 final String byteData = res.toString().replaceAll("(\n" +
@@ -515,12 +516,12 @@ public class writerThread extends Thread {
 
     private void displayOnUi(final String variableName, final String variableValue, int speed) {
         if ( speed >= thresholdSpeed ) {
-            ((MainActivity) ctxUi).runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    ((MainActivity) ctxUi).canBUSUpdate(variableName, variableName, variableValue);
-                }
-            });
+//            ((MainActivity) ctxUi).runOnUiThread(new Runnable() {
+//                @Override
+//                public void run() {
+//                    ((MainActivity) ctxUi).canBUSUpdate(variableName, variableName, variableValue);
+//                }
+//            });
         }
     }
     private int signConversion(int x, int bits) {
@@ -528,4 +529,16 @@ public class writerThread extends Thread {
         int m = (1 << bits) - 1;
         return ((x + h) & m) - h;
     }
+
+    private void reattemptAndSetUpElm() {
+        try {
+            Log.d(TAG, "stopping the existing service gracefully");
+            this.myService.stopService();
+            Log.d(TAG, "start a new service with a new connection");
+            this.myService.startService();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
 }
