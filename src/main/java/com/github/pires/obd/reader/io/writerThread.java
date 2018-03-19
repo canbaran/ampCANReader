@@ -1,5 +1,6 @@
 package com.github.pires.obd.reader.io;
 
+import android.bluetooth.BluetoothSocket;
 import android.content.Context;
 import android.os.Bundle;
 import android.os.Handler;
@@ -14,6 +15,7 @@ import com.github.pires.obd.reader.activity.ConfigActivity;
 import com.github.pires.obd.reader.activity.MainActivity;
 import com.github.pires.obd.reader.database.entity.ampData;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PipedOutputStream;
@@ -27,6 +29,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -58,6 +61,7 @@ public class writerThread extends Thread {
     private int indexKey;
     private int numOfBytes;
     private long startTime;
+    private int trialNumber=30;
 //    private int numberOfMessages = 0;
 //    private int numberOfBufferFullErrors = 0;
 
@@ -532,10 +536,43 @@ public class writerThread extends Thread {
 
     private void reattemptAndSetUpElm() {
         try {
-            Log.d(TAG, "stopping the existing service gracefully");
-            this.myService.stopService();
-            Log.d(TAG, "start a new service with a new connection");
-            this.myService.startService();
+            Log.d(TAG, "stopping the existing service");
+            ((MainActivity) ctxUi).runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    ((MainActivity) ctxUi).stopLiveData();
+                }
+            });
+
+            boolean connectionEstablished = false;
+            //ensure we have solid bluetooth connection
+            for( int i=0; i<trialNumber; i++) {
+                try {
+                    TimeUnit.SECONDS.sleep(1);
+                    BluetoothSocket tempSocket = BluetoothManager.connect(this.myService.dev);
+                    tempSocket.close();
+                    connectionEstablished = true;
+                    break;
+                } catch (Exception e2) {
+                    Log.e(TAG, "There was an error while establishing Bluetooth connection. Stopping app..", e2);
+                    throw new IOException();
+                }
+            }
+
+
+            if ( connectionEstablished ) {
+//            this.myService.stopService();
+                Log.d(TAG, "start a new service with a new connection");
+                ((MainActivity) ctxUi).runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        ((MainActivity) ctxUi).startLiveData();
+                    }
+                });
+            } else {
+                Log.d(TAG, "coulndt connect to the blueetooth");
+            }
+//            this.myService.startService();
         } catch (Exception e) {
             e.printStackTrace();
         }

@@ -533,7 +533,7 @@ public class MainActivity extends RoboActivity implements ObdProgressListener, L
         startActivity(new Intent(this, TroubleCodesActivity.class));
     }
 
-    private void startLiveData() {
+    public void startLiveData() {
         Log.d(TAG, "Starting live data..");
 
         tl.removeAllViews(); //start fresh
@@ -568,39 +568,39 @@ public class MainActivity extends RoboActivity implements ObdProgressListener, L
         }
     }
 
-    private void stopLiveData() {
+    public void stopLiveData() {
         Log.d(TAG, "Stopping live data..");
 
 //        gpsStop();
 
         doUnbindService();
-        endTrip();
+//        endTrip();
 
         releaseWakeLockIfHeld();
-final String devemail = prefs.getString(ConfigActivity.DEV_EMAIL_KEY,null);
-        if (devemail != null) {
-            DialogInterface.OnClickListener dialogClickListener = new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                    switch (which) {
-                        case DialogInterface.BUTTON_POSITIVE:
-                            ObdGatewayService.saveLogcatToFile(getApplicationContext(), devemail);
-                            break;
-
-                        case DialogInterface.BUTTON_NEGATIVE:
-                            //No button clicked
-                            break;
-                    }
-                }
-            };
-            AlertDialog.Builder builder = new AlertDialog.Builder(this);
-            builder.setMessage("Where there issues?\nThen please send us the logs.\nSend Logs?").setPositiveButton("Yes", dialogClickListener)
-                    .setNegativeButton("No", dialogClickListener).show();
-        }
-
-        if (myCSVWriter != null) {
-            myCSVWriter.closeLogCSVWriter();
-        }
+//        final String devemail = prefs.getString(ConfigActivity.DEV_EMAIL_KEY,null);
+//        if (devemail != null) {
+//            DialogInterface.OnClickListener dialogClickListener = new DialogInterface.OnClickListener() {
+//                @Override
+//                public void onClick(DialogInterface dialog, int which) {
+//                    switch (which) {
+//                        case DialogInterface.BUTTON_POSITIVE:
+//                            ObdGatewayService.saveLogcatToFile(getApplicationContext(), devemail);
+//                            break;
+//
+//                        case DialogInterface.BUTTON_NEGATIVE:
+//                            //No button clicked
+//                            break;
+//                    }
+//                }
+//            };
+//            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+//            builder.setMessage("Where there issues?\nThen please send us the logs.\nSend Logs?").setPositiveButton("Yes", dialogClickListener)
+//                    .setNegativeButton("No", dialogClickListener).show();
+//        }
+//
+//        if (myCSVWriter != null) {
+//            myCSVWriter.closeLogCSVWriter();
+//        }
     }
 
     protected void endTrip() {

@@ -89,7 +89,7 @@ public class ObdGatewayService extends AbstractGatewayService {
     @Inject
     SharedPreferences prefs;
 
-    private BluetoothDevice dev = null;
+    public BluetoothDevice dev = null;
     private BluetoothSocket sock = null;
     private BluetoothSocket sockFallback = null;
     private AmazonDynamoDBClient ddbClient;
@@ -242,6 +242,7 @@ public class ObdGatewayService extends AbstractGatewayService {
         isRunning = true;
         try {
         	sock = BluetoothManager.connect(dev);
+
         } catch (Exception e2) {
         	Log.e(TAG, "There was an error while establishing Bluetooth connection. Stopping app..", e2);
         	stopService();
