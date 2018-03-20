@@ -378,31 +378,31 @@ public class MainActivity extends RoboActivity implements ObdProgressListener, L
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        if ( isExternalStorageWritable() ) {
-
-            File appDirectory = new File( Environment.getExternalStorageDirectory() + "/MyPersonalAppFolder" );
-            File logDirectory = new File( appDirectory + "/log" );
-            File logFile = new File( logDirectory, "logcat" + System.currentTimeMillis() + ".txt" );
-
-            // create app folder
-            if ( !appDirectory.exists() ) {
-                appDirectory.mkdir();
-            }
-
-            // create log folder
-            if ( !logDirectory.exists() ) {
-                logDirectory.mkdir();
-            }
-
-            // clear the previous logcat and then write the new one to the file
-            try {
-                Process process = Runtime.getRuntime().exec("logcat -c");
-                process = Runtime.getRuntime().exec("logcat -f " + logFile);
-            } catch ( IOException e ) {
-                e.printStackTrace();
-            }
-
-        }
+//        if ( isExternalStorageWritable() ) {
+//
+//            File appDirectory = new File( Environment.getExternalStorageDirectory() + "/MyPersonalAppFolder" );
+//            File logDirectory = new File( appDirectory + "/log" );
+//            File logFile = new File( logDirectory, "logcat" + System.currentTimeMillis() + ".txt" );
+//
+//            // create app folder
+//            if ( !appDirectory.exists() ) {
+//                appDirectory.mkdir();
+//            }
+//
+//            // create log folder
+//            if ( !logDirectory.exists() ) {
+//                logDirectory.mkdir();
+//            }
+//
+//            // clear the previous logcat and then write the new one to the file
+//            try {
+//                Process process = Runtime.getRuntime().exec("logcat -c");
+//                process = Runtime.getRuntime().exec("logcat -f " + logFile);
+//            } catch ( IOException e ) {
+//                e.printStackTrace();
+//            }
+//
+//        }
 
 
         //delete db
@@ -616,26 +616,26 @@ public class MainActivity extends RoboActivity implements ObdProgressListener, L
 //        endTrip();
 
         releaseWakeLockIfHeld();
-//        final String devemail = prefs.getString(ConfigActivity.DEV_EMAIL_KEY,null);
-//        if (devemail != null) {
-//            DialogInterface.OnClickListener dialogClickListener = new DialogInterface.OnClickListener() {
-//                @Override
-//                public void onClick(DialogInterface dialog, int which) {
-//                    switch (which) {
-//                        case DialogInterface.BUTTON_POSITIVE:
-//                            ObdGatewayService.saveLogcatToFile(getApplicationContext(), devemail);
-//                            break;
-//
-//                        case DialogInterface.BUTTON_NEGATIVE:
-//                            //No button clicked
-//                            break;
-//                    }
-//                }
-//            };
-//            AlertDialog.Builder builder = new AlertDialog.Builder(this);
-//            builder.setMessage("Where there issues?\nThen please send us the logs.\nSend Logs?").setPositiveButton("Yes", dialogClickListener)
-//                    .setNegativeButton("No", dialogClickListener).show();
-//        }
+        final String devemail = prefs.getString(ConfigActivity.DEV_EMAIL_KEY,null);
+        if (devemail != null) {
+            DialogInterface.OnClickListener dialogClickListener = new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    switch (which) {
+                        case DialogInterface.BUTTON_POSITIVE:
+                            ObdGatewayService.saveLogcatToFile(getApplicationContext(), devemail);
+                            break;
+
+                        case DialogInterface.BUTTON_NEGATIVE:
+                            //No button clicked
+                            break;
+                    }
+                }
+            };
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            builder.setMessage("Where there issues?\nThen please send us the logs.\nSend Logs?").setPositiveButton("Yes", dialogClickListener)
+                    .setNegativeButton("No", dialogClickListener).show();
+        }
 //
 //        if (myCSVWriter != null) {
 //            myCSVWriter.closeLogCSVWriter();
