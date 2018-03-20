@@ -163,10 +163,10 @@ public class VisualsActivity extends AppCompatActivity {
         int curRLD = curAmpData.getRLD();
         if (curLLD != 255 && curLLD > 2){
             if (curRLD != 255 && curRLD > 2) {
-                if (curRLD<40) {
+                if (curRLD<42) {
                     LLDTarget = (curLLD + curRLD) / 2;
                 } else {
-                    LLDTarget = (curLLD + 40)/2;
+                    LLDTarget = (curLLD + 42)/2;
                 }
             } else {
                 LLDTarget = 35;
@@ -184,9 +184,9 @@ public class VisualsActivity extends AppCompatActivity {
         else {
             centerOffset = 20;
         }
-
         return centerOffset;
     }
+
     private void setupChart(LineChart curChart) {
         // disable description text
         curChart.getDescription().setEnabled(false);
