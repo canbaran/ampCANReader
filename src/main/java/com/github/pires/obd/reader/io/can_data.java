@@ -27,6 +27,8 @@ public class can_data {
         private int sRate;
         private int tErrorIntegral;
         private int tError;
+        private int backOff;
+
         //503
         private int commandTorque;
         private int userTorque;
@@ -172,6 +174,15 @@ public class can_data {
         public void setTotalTorque( int totalTorque ) {
             this.totalTorque = totalTorque;
         }
+
+        //backOff
+        @DynamoDBAttribute(attributeName = "backOff")
+        public int getBackOff() {
+            return backOff;
+        }
+        public void setBackOff( int backOff ) {
+        this.backOff = backOff;
+    }
 
 
 

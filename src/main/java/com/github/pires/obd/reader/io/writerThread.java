@@ -213,6 +213,7 @@ public class writerThread extends Thread {
             try {
 
                 b = (byte) elmInputStream.read();
+                Log.d(TAG, "Input From Elm Has arrived");
 
             } catch (Exception e) {
                 e.printStackTrace();
@@ -226,8 +227,9 @@ public class writerThread extends Thread {
 
             }
             c = (char) b;
-            if (c == '>' || c == '<' || c == '\r')
+            if (c == '>' || c == '<' || c == '\r' )
             {
+                Log.d(TAG, "complete message has arrived");
 //                if (!res.toString().equals("DATA ERROR")) {
                 final String byteData = res.toString().replaceAll("(\n" +
                         "|\r" + "|<" + "|\\bAT\\s?MA\\b" + "|\\s+" + "|>"+
@@ -247,8 +249,7 @@ public class writerThread extends Thread {
                         Pattern p = Pattern.compile("^[0-9A-F]+$");
                         Matcher m = p.matcher(byteData);
                         if (byteData.length() == messageLengthWithID && m.find()) {
-
-
+                            Log.d(TAG, "complete message has arrived");
                             if (didGrabAllMsgs(byteData, IdDataMap)) {
                                 ((MainActivity) ctxUi).runOnUiThread(new Runnable() {
                                     @Override
@@ -459,11 +460,15 @@ public class writerThread extends Thread {
                     int tError = signConversion( Integer.parseInt(sixthByte+seventhByte.substring(0,1), 16), (sixthByte+seventhByte.substring(0,1)).length()*4);
                     decodedCanData.setTError(tError);
 
+                    int backOff = ( Integer.parseInt(seventhByte.substring(1,2),16) & 0x0C ) / 4;
+                    decodedCanData.setBackOff( backOff );
+
                     displayOnUi("tAngle", Integer.toString(decodedCanData.getTAngle()), speed);
                     displayOnUi("sAngle", Integer.toString(decodedCanData.getSAngle()), speed);
                     displayOnUi("sRate", Integer.toString(decodedCanData.getSRate()), speed);
                     displayOnUi("tErrorIntegral", Integer.toString(decodedCanData.getTErrorIntegral()), speed);
                     displayOnUi("tError", Integer.toString(decodedCanData.getTError()), speed);
+                    displayOnUi("BackOff", Integer.toString(decodedCanData.getBackOff()), speed);
 
 
                     break;

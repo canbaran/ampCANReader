@@ -160,7 +160,8 @@ public class readerThread extends Thread {
             ampData curAmpData = new ampData();
 
             can_data curCanData = cleanArr.get(i);
-            Log.d(TAG, "Reader Thread Timestamp: " + Long.toString(curCanData.getTimeStamp()));
+
+//            Log.d(TAG, "Reader Thread Timestamp: " + Long.toString(curCanData.getTimeStamp()));
 
             curAmpData.setCommandTorque(curCanData.getCommandTorque());
             curAmpData.setCurve(curCanData.getCurve());
@@ -173,6 +174,7 @@ public class readerThread extends Thread {
             curAmpData.setTotalTorque(curCanData.getTotalTorque());
             curAmpData.setTimestamp(curCanData.getTimeStamp());
             curAmpData.setIsPlotted(false);
+
             list[i] = curAmpData;
         }
 
