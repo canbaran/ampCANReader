@@ -545,7 +545,7 @@ public class writerThread extends Thread {
             ((MainActivity) ctxUi).runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    ((MainActivity) ctxUi).stopLiveData();
+                    ((MainActivity) ctxUi).stopLiveData(false);
                 }
             });
 
