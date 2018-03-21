@@ -78,6 +78,8 @@ import roboguice.inject.InjectView;
 
 import static com.github.pires.obd.reader.activity.ConfigActivity.getGpsDistanceUpdatePeriod;
 import static com.github.pires.obd.reader.activity.ConfigActivity.getGpsUpdatePeriod;
+import static com.github.pires.obd.reader.io.uiNotificationIds.emailLogs;
+import static com.github.pires.obd.reader.io.uiNotificationIds.fileCreation;
 
 // Some code taken from https://github.com/barbeau/gpstest
 
@@ -613,13 +615,22 @@ public class MainActivity extends RoboActivity implements ObdProgressListener, L
 //        gpsStop();
 
         doUnbindService();
+
 //        endTrip();
 
         releaseWakeLockIfHeld();
+
         final String devemail = prefs.getString(ConfigActivity.DEV_EMAIL_KEY,null);
         if (buttonPressed) {
             if (devemail != null) {
-                ObdGatewayService.saveLogcatToFile(getApplicationContext(), devemail);
+                HashMap<String, String> actionResult = new HashMap<String, String>();
+                actionResult.put("email", "Failed");
+                actionResult.put("file", "Failed");
+                ObdGatewayService.saveLogcatToFile(getApplicationContext(), devemail, actionResult);
+//                Log.d(TAG, "email sent log in the main activity " + actionResult.get("email"));
+                canBUSUpdate(emailLogs, emailLogs, actionResult.get("email"));
+                canBUSUpdate(fileCreation, fileCreation, actionResult.get("file"));
+
 //                DialogInterface.OnClickListener dialogClickListener = new DialogInterface.OnClickListener() {
 //                    @Override
 //                    public void onClick(DialogInterface dialog, int which) {

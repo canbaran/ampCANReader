@@ -67,6 +67,8 @@ import com.amazonaws.mobileconnectors.dynamodbv2.dynamodbmapper.*;
 import static android.content.ContentValues.TAG;
 import static com.github.pires.obd.reader.io.uiNotificationIds.awsUploadStatus;
 import static com.github.pires.obd.reader.io.uiNotificationIds.elmDeviceStatus;
+import static com.github.pires.obd.reader.io.uiNotificationIds.emailLogs;
+import static com.github.pires.obd.reader.io.uiNotificationIds.fileCreation;
 
 /**
  * This service is primarily responsible for establishing and maintaining a
@@ -328,7 +330,7 @@ public class ObdGatewayService extends AbstractGatewayService {
                 if (job.getState().equals(ObdCommandJobState.NEW)) {
                     Log.d(TAG, "Job state is NEW. Run it..");
                     job.setState(ObdCommandJobState.RUNNING);
-                    if ( job.getCommand().getName().equals("Monitoring everything") ) {
+                    if ( job.getCommand().getName().equals("Live Data Stopped") ) {
 
                         BlockingQueue<ArrayList<com.github.pires.obd.reader.io.can_data>> queue = new ArrayBlockingQueue<ArrayList<com.github.pires.obd.reader.io.can_data>>(queueSize);
 
@@ -477,7 +479,7 @@ public class ObdGatewayService extends AbstractGatewayService {
             return ObdGatewayService.this;
         }
     }
-    public static void saveLogcatToFile(Context context, String devemail) {
+    public static boolean saveLogcatToFile(final Context context, String devemail, HashMap<String, String> actionResult) { //static
 //        Intent emailIntent = new Intent(Intent.ACTION_SEND);
 //        emailIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 //                emailIntent.setType("text/plain");
@@ -488,6 +490,7 @@ public class ObdGatewayService extends AbstractGatewayService {
         sb.append("\nManufacturer: ").append(Build.MANUFACTURER);
         sb.append("\nModel: ").append(Build.MODEL);
         sb.append("\nRelease: ").append(Build.VERSION.RELEASE);
+
 
 //        emailIntent.putExtra(Intent.EXTRA_TEXT, sb.toString());
         long mils = System.currentTimeMillis();
@@ -504,57 +507,82 @@ public class ObdGatewayService extends AbstractGatewayService {
         //emailIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 //        context.startActivity(Intent.createChooser(emailIntent, "Pick an Email provider").addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
 
+        String fileCreation;
         try {
             @SuppressWarnings("unused")
 //            Process process1 = Runtime.getRuntime().exec("logcat -c");
             Process process2 = Runtime.getRuntime().exec("logcat -v threadtime -f "+outputFile.getAbsolutePath());
-
+            actionResult.put("file", "Success");
+//            Toast.makeText(context, "File Created Succesfully", Toast.LENGTH_LONG).show();
+//            (context).runOnUiThread(new Runnable() {
+//                @Override
+//                public void run() {
+//                    (context).canBUSUpdate(fileCreation,fileCreation, "Success" );
+//                }
+//            });
         } catch (IOException e) {
+            actionResult.put("file", "Failed");
+            e.printStackTrace();
+//            Toast.makeText(context, "Failed to Create Logs File", Toast.LENGTH_LONG).show();
+//            ((MainActivity) context).runOnUiThread(new Runnable() {
+//                @Override
+//                public void run() {
+//                    ((MainActivity) context).canBUSUpdate(fileCreation,fileCreation, "Failed" );
+//                }
+//            });
+        }
+
+        String[] attachments = {outputFile.getAbsolutePath()};
+        String currentDateTimeString = DateFormat.getDateTimeInstance().format(new Date());
+        String currentSubject = "System Logs from: " + currentDateTimeString;
+        emailRunnable myEmailRunnable = new emailRunnable(attachments,currentDateTimeString,currentSubject, sb );
+        Thread simpleThread = new Thread(myEmailRunnable);
+        simpleThread.start();
+        try {
+            simpleThread.join();
+        } catch (Exception e) {
             e.printStackTrace();
         }
 
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                String[] attachments = {outputFile.getAbsolutePath()};
-                String currentDateTimeString = DateFormat.getDateTimeInstance().format(new Date());
-                String currentSubject = "System Logs from: " + currentDateTimeString;
-                try {
-                    boolean sent = sendEmail("can@automotivepower.com", "ampcanreader@gmail.com", currentSubject, sb.toString(), attachments);
-                    Log.d(TAG, "email Sent: " + sent);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
-        }).start();
+        if (myEmailRunnable.getValue()) {
+            actionResult.put("email", "Success");
+        } else {
+            actionResult.put("email", "Failed");
+        }
+
+        return myEmailRunnable.getValue();
+//        new Thread(new Runnable() {
+//            @Override
+//            public void run() {
+//
+//                try {
+//                    final boolean sent = sendEmail("can@automotivepower.com", "ampcanreader@gmail.com", currentSubject, sb.toString(), attachments);
+//                    Log.d(TAG, "email Sent: " + sent);
+////                    Toast.makeText(context, "Email Sent: "+String.valueOf(sent), Toast.LENGTH_LONG).show();
+////                    ((MainActivity)  ).runOnUiThread(new Runnable() {
+////                        @Override
+////                        public void run() {
+////                            ((MainActivity)  ).canBUSUpdate(emailLogs,emailLogs, String.valueOf( sent) );
+////                        }
+////                    });
+//
+//
+//
+//                } catch (Exception e) {
+//                    e.printStackTrace();
+//                }
+//
+//
+//            }
+//        }).start();
+
 
 
     }
-    public static boolean sendEmail(String to, String from, String subject,
-                                    String message,String[] attachments) throws Exception {
-        Mail mail = new Mail();
-        if (subject != null && subject.length() > 0) {
-            mail.setSubject(subject);
-        } else {
-            mail.setSubject("Subject");
-        }
 
-        if (message != null && message.length() > 0) {
-            mail.setBody(message);
-        } else {
-            mail.setBody("Message");
-        }
 
-        mail.setFrom(from);
-        mail.setTo(new String[] {to});
 
-        if (attachments != null) {
-            for (String attachement : attachments) {
-                mail.addAttachment(attachement);
-            }
-        }
-        return mail.send();
-    }
+
 
     @DynamoDBTable(tableName = "canData")
     public class can_data {

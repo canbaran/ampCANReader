@@ -32,6 +32,6 @@ public class MonitorAllCommand extends ObdProtocolCommand {
     /** {@inheritDoc} */
     @Override
     public String getName() {
-        return "Monitoring everything";
+        return "Live Data Stopped";
     }
 }
