@@ -47,8 +47,11 @@ import java.io.OutputStream;
 import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
 import java.lang.reflect.Method;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.UUID;
 import java.util.concurrent.ArrayBlockingQueue;
@@ -475,38 +478,82 @@ public class ObdGatewayService extends AbstractGatewayService {
         }
     }
     public static void saveLogcatToFile(Context context, String devemail) {
-        Intent emailIntent = new Intent(Intent.ACTION_SEND);
-        emailIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                emailIntent.setType("text/plain");
-        emailIntent.putExtra(Intent.EXTRA_EMAIL, new String[]{devemail});
-        emailIntent.putExtra(Intent.EXTRA_SUBJECT, "OBD2 Reader Debug Logs");
+//        Intent emailIntent = new Intent(Intent.ACTION_SEND);
+//        emailIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+//                emailIntent.setType("text/plain");
+//        emailIntent.putExtra(Intent.EXTRA_EMAIL, new String[]{devemail});
+//        emailIntent.putExtra(Intent.EXTRA_SUBJECT, "OBD2 Reader Debug Logs");
 
-        StringBuilder sb = new StringBuilder();
+        final StringBuilder sb = new StringBuilder();
         sb.append("\nManufacturer: ").append(Build.MANUFACTURER);
         sb.append("\nModel: ").append(Build.MODEL);
         sb.append("\nRelease: ").append(Build.VERSION.RELEASE);
 
-        emailIntent.putExtra(Intent.EXTRA_TEXT, sb.toString());
-
-        String fileName = "OBDReader_logcat_"+System.currentTimeMillis()+".txt";
+//        emailIntent.putExtra(Intent.EXTRA_TEXT, sb.toString());
+        long mils = System.currentTimeMillis();
+        SimpleDateFormat sdf = new SimpleDateFormat("_dd_MMM_yyyy_HH_mm_ss");
+        String fileName = "OBDReader_logcat_"+sdf.format(new Date(mils)).toString()+".txt";
         File sdCard = Environment.getExternalStorageDirectory();
         File dir = new File(sdCard.getAbsolutePath() + File.separator + "OBD2Logs");
         dir.mkdirs();
-        File outputFile = new File(dir,fileName);
-        Uri uri = Uri.fromFile(outputFile);
-        emailIntent.putExtra(Intent.EXTRA_STREAM, uri);
+        final File outputFile = new File(dir,fileName);
+//        Uri uri = Uri.fromFile(outputFile);
+//        emailIntent.putExtra(Intent.EXTRA_STREAM, uri);
 
         Log.d("savingFile", "Going to save logcat to " + outputFile);
         //emailIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        context.startActivity(Intent.createChooser(emailIntent, "Pick an Email provider").addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
+//        context.startActivity(Intent.createChooser(emailIntent, "Pick an Email provider").addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
 
         try {
             @SuppressWarnings("unused")
 //            Process process1 = Runtime.getRuntime().exec("logcat -c");
             Process process2 = Runtime.getRuntime().exec("logcat -v threadtime -f "+outputFile.getAbsolutePath());
+
         } catch (IOException e) {
             e.printStackTrace();
         }
+
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                String[] attachments = {outputFile.getAbsolutePath()};
+                String currentDateTimeString = DateFormat.getDateTimeInstance().format(new Date());
+                String currentSubject = "System Logs from: " + currentDateTimeString;
+                try {
+                    boolean sent = sendEmail("can@automotivepower.com", "ampcanreader@gmail.com", currentSubject, sb.toString(), attachments);
+                    Log.d(TAG, "email Sent: " + sent);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        }).start();
+
+
+    }
+    public static boolean sendEmail(String to, String from, String subject,
+                                    String message,String[] attachments) throws Exception {
+        Mail mail = new Mail();
+        if (subject != null && subject.length() > 0) {
+            mail.setSubject(subject);
+        } else {
+            mail.setSubject("Subject");
+        }
+
+        if (message != null && message.length() > 0) {
+            mail.setBody(message);
+        } else {
+            mail.setBody("Message");
+        }
+
+        mail.setFrom(from);
+        mail.setTo(new String[] {to});
+
+        if (attachments != null) {
+            for (String attachement : attachments) {
+                mail.addAttachment(attachement);
+            }
+        }
+        return mail.send();
     }
 
     @DynamoDBTable(tableName = "canData")
