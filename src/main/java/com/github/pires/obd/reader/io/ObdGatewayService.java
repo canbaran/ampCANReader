@@ -479,7 +479,7 @@ public class ObdGatewayService extends AbstractGatewayService {
             return ObdGatewayService.this;
         }
     }
-    public static boolean saveLogcatToFile(final Context context, String devemail, HashMap<String, String> actionResult) { //static
+    public static void saveLogcatToFile(final Context context, String devemail, HashMap<String, String> actionResult) { //static
 //        Intent emailIntent = new Intent(Intent.ACTION_SEND);
 //        emailIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 //                emailIntent.setType("text/plain");
@@ -512,24 +512,17 @@ public class ObdGatewayService extends AbstractGatewayService {
             @SuppressWarnings("unused")
 //            Process process1 = Runtime.getRuntime().exec("logcat -c");
             Process process2 = Runtime.getRuntime().exec("logcat -v threadtime -f "+outputFile.getAbsolutePath());
-            actionResult.put("file", "Success");
-//            Toast.makeText(context, "File Created Succesfully", Toast.LENGTH_LONG).show();
-//            (context).runOnUiThread(new Runnable() {
-//                @Override
-//                public void run() {
-//                    (context).canBUSUpdate(fileCreation,fileCreation, "Success" );
-//                }
-//            });
+//            try {
+//                process2.waitFor();
+//            } catch (Exception e) {
+//                e.printStackTrace();
+//            }
+            actionResult.put("file", "test");
+
         } catch (IOException e) {
             actionResult.put("file", "Failed");
             e.printStackTrace();
-//            Toast.makeText(context, "Failed to Create Logs File", Toast.LENGTH_LONG).show();
-//            ((MainActivity) context).runOnUiThread(new Runnable() {
-//                @Override
-//                public void run() {
-//                    ((MainActivity) context).canBUSUpdate(fileCreation,fileCreation, "Failed" );
-//                }
-//            });
+
         }
 
         String[] attachments = {outputFile.getAbsolutePath()};
@@ -550,7 +543,7 @@ public class ObdGatewayService extends AbstractGatewayService {
             actionResult.put("email", "Failed");
         }
 
-        return myEmailRunnable.getValue();
+//        return myEmailRunnable.getValue();
 //        new Thread(new Runnable() {
 //            @Override
 //            public void run() {

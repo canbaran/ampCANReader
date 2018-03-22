@@ -1,5 +1,6 @@
 package com.github.pires.obd.reader.activity;
 
+import android.Manifest;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.arch.persistence.room.Room;
@@ -10,6 +11,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
@@ -25,6 +27,8 @@ import android.os.Environment;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.PowerManager;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.Gravity;
@@ -100,6 +104,7 @@ public class MainActivity extends RoboActivity implements ObdProgressListener, L
     private static final int SAVE_TRIP_NOT_AVAILABLE = 11;
     private static final int VISUALS = 12;
     private static boolean bluetoothDefaultIsEnable = false;
+    private static final int REQUEST_WRITE_STORAGE=1;
 
     //database variables
     private MyDatabase database;
@@ -302,32 +307,6 @@ public class MainActivity extends RoboActivity implements ObdProgressListener, L
         } else addTableRow(cmdID, cmdName, cmdResult);
     }
 
-//    public void canBUSUpdateCanData(can_data curCanData) {
-//        Date curDate = new Date(curCanData.getTimeStamp());
-//        SimpleDateFormat sdfDate = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
-//        String strDate = sdfDate.format(curDate);
-//        canBUSUpdate("Timestamp","Timestamp", strDate );
-//        canBUSUpdate("LLQ", "LLQ", Integer.toString(curCanData.getLLQ()));
-//        canBUSUpdate("RLQ", "RLQ", Integer.toString( curCanData.getRLQ()));
-//        canBUSUpdate("trim","trim",  Integer.toString(curCanData.getTrim()));
-//        canBUSUpdate("LLD","LLD", Integer.toString(curCanData.getLLD()));
-//        canBUSUpdate("RLD","RLD", Integer.toString(curCanData.getRLD()));
-//        canBUSUpdate("XD","XD", Integer.toString(curCanData.getXD()));
-//        canBUSUpdate("curve","curve", Integer.toString(curCanData.getCurve()));
-//        canBUSUpdate("speed","speed", Integer.toString(curCanData.getSpeed()));
-//        canBUSUpdate("tAngle","tAngle", Integer.toString(curCanData.getTAngle()));
-//        canBUSUpdate("sAngle","sAngle", Integer.toString(curCanData.getSAngle()));
-//        canBUSUpdate("sRate","sRate", Integer.toString(curCanData.getSRate()));
-//        canBUSUpdate("tErrorIntegral","tErrorIntegral", Integer.toString(curCanData.getTErrorIntegral()));
-//        canBUSUpdate("tError","tError", Integer.toString(curCanData.getTError()));
-//        canBUSUpdate("commandTorque","commandTorque", Integer.toString(curCanData.getCommandTorque()));
-//        canBUSUpdate("userTorque","userTorque", Integer.toString(curCanData.getUserTorque()));
-//        canBUSUpdate("totalTorque","totalTorque", Integer.toString(curCanData.getTotalTorque()));
-////        if (vv.findViewWithTag(cmdID) != null) {
-////            TextView existingTV = (TextView) vv.findViewWithTag(cmdID);
-////            existingTV.setText(cmdResult);
-////        } else addTableRow(cmdID, cmdName, cmdResult);
-//    }
 
     public MyDatabase getDB() {
         return database;
@@ -622,14 +601,29 @@ public class MainActivity extends RoboActivity implements ObdProgressListener, L
 
         final String devemail = prefs.getString(ConfigActivity.DEV_EMAIL_KEY,null);
         if (buttonPressed) {
-            if (devemail != null) {
-                HashMap<String, String> actionResult = new HashMap<String, String>();
-                actionResult.put("email", "Failed");
-                actionResult.put("file", "Failed");
+//            if (devemail != null) {
+            HashMap<String, String> actionResult = new HashMap<String, String>();
+            actionResult.put("email", "Failed");
+            actionResult.put("file", "Failed");
+            boolean hasPermission = (ContextCompat.checkSelfPermission(MainActivity.this,
+                    Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED);
+            if(hasPermission){
                 ObdGatewayService.saveLogcatToFile(getApplicationContext(), devemail, actionResult);
-//                Log.d(TAG, "email sent log in the main activity " + actionResult.get("email"));
                 canBUSUpdate(emailLogs, emailLogs, actionResult.get("email"));
                 canBUSUpdate(fileCreation, fileCreation, actionResult.get("file"));
+            }else{
+                // ask the permission
+                Log.d(TAG, "about to ask for permission request");
+                ActivityCompat.requestPermissions(MainActivity.this,
+                        new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                        REQUEST_WRITE_STORAGE);
+                // You have to put nothing here (you can't write here since you don't
+                // have the permission yet and requestPermissions is called asynchronously)
+            }
+
+
+//                Log.d(TAG, "email sent log in the main activity " + actionResult.get("email"));
+
 
 //                DialogInterface.OnClickListener dialogClickListener = new DialogInterface.OnClickListener() {
 //                    @Override
@@ -648,12 +642,42 @@ public class MainActivity extends RoboActivity implements ObdProgressListener, L
 //                AlertDialog.Builder builder = new AlertDialog.Builder(this);
 //                builder.setMessage("Where there issues?\nThen please send us the logs.\nSend Logs?").setPositiveButton("Yes", dialogClickListener)
 //                        .setNegativeButton("No", dialogClickListener).show();
-            }
+//            }
         }
 //
 //        if (myCSVWriter != null) {
 //            myCSVWriter.closeLogCSVWriter();
 //        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode,
+                                           String permissions[], int[] grantResults) {
+        switch (requestCode) {
+            case REQUEST_WRITE_STORAGE: {
+                // If request is cancelled, the result arrays are empty.
+                if (grantResults.length > 0
+                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    HashMap<String, String> actionResult = new HashMap<String, String>();
+                    actionResult.put("email", "Failed");
+                    actionResult.put("file", "Failed");
+                    ObdGatewayService.saveLogcatToFile(getApplicationContext(), "", actionResult);
+                    canBUSUpdate(emailLogs, emailLogs, actionResult.get("email"));
+                    canBUSUpdate(fileCreation, fileCreation, actionResult.get("file"));
+                    // permission was granted, yay! Do the
+                    // contacts-related task you need to do.
+
+                } else {
+                    Log.d(TAG, "cannot write the logs into file and email");
+                    // permission denied, boo! Disable the
+                    // functionality that depends on this permission.
+                }
+                return;
+            }
+
+            // other 'case' lines to check for other
+            // permissions this app might request.
+        }
     }
 
     protected void endTrip() {
