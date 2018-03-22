@@ -105,6 +105,8 @@ public class MainActivity extends RoboActivity implements ObdProgressListener, L
     private static final int VISUALS = 12;
     private static boolean bluetoothDefaultIsEnable = false;
     private static final int REQUEST_WRITE_STORAGE=1;
+    private String AbsLogFileName;
+    private HashMap<String, String> actionResult = new HashMap<String,String>();
 
     //database variables
     private MyDatabase database;
@@ -359,39 +361,8 @@ public class MainActivity extends RoboActivity implements ObdProgressListener, L
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-//        if ( isExternalStorageWritable() ) {
-//
-//            File appDirectory = new File( Environment.getExternalStorageDirectory() + "/MyPersonalAppFolder" );
-//            File logDirectory = new File( appDirectory + "/log" );
-//            File logFile = new File( logDirectory, "logcat" + System.currentTimeMillis() + ".txt" );
-//
-//            // create app folder
-//            if ( !appDirectory.exists() ) {
-//                appDirectory.mkdir();
-//            }
-//
-//            // create log folder
-//            if ( !logDirectory.exists() ) {
-//                logDirectory.mkdir();
-//            }
-//
-//            // clear the previous logcat and then write the new one to the file
-//            try {
-//                Process process = Runtime.getRuntime().exec("logcat -c");
-//                process = Runtime.getRuntime().exec("logcat -f " + logFile);
-//            } catch ( IOException e ) {
-//                e.printStackTrace();
-//            }
-//
-//        }
+        startLogWriteOperations();
 
-
-        //delete db
-
-
-//        database = Room.databaseBuilder(getApplicationContext(), MyDatabase.class, DATABASE_NAME)
-//                .addMigrations(MyDatabase.MIGRATION_1_2)
-//                .build();
 
         final BluetoothAdapter btAdapter = BluetoothAdapter.getDefaultAdapter();
         if (btAdapter != null)
@@ -410,14 +381,40 @@ public class MainActivity extends RoboActivity implements ObdProgressListener, L
         triplog = TripLog.getInstance(context);
     }
 
-    /* Checks if external storage is available for read and write */
-    public boolean isExternalStorageWritable() {
-        String state = Environment.getExternalStorageState();
-        if ( Environment.MEDIA_MOUNTED.equals( state ) ) {
-            return true;
+    private void startLogWriteOperations() {
+
+        boolean hasPermission = (ContextCompat.checkSelfPermission(MainActivity.this,
+                Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED);
+        if(hasPermission){
+            createFoldersStartWriting();
+        }else{
+            // ask the permission
+            Log.d(TAG, "about to ask for permission request");
+            ActivityCompat.requestPermissions(MainActivity.this,
+                    new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                    REQUEST_WRITE_STORAGE);
         }
-        return false;
+
+
     }
+
+    /* Checks if external storage is available for read and write */
+//    public boolean isExternalStorageWritable() {
+//        boolean hasPermission = (ContextCompat.checkSelfPermission(MainActivity.this,
+//                Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED);
+//        if(hasPermission){
+//            return true;
+//        }else{
+//            // ask the permission
+//            Log.d(TAG, "about to ask for permission request");
+//            ActivityCompat.requestPermissions(MainActivity.this,
+//                    new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+//                    REQUEST_WRITE_STORAGE);
+//            // You have to put nothing here (you can't write here since you don't
+//            // have the permission yet and requestPermissions is called asynchronously)
+//        }
+//
+//    }
 
     @Override
     protected void onStart() {
@@ -602,52 +599,33 @@ public class MainActivity extends RoboActivity implements ObdProgressListener, L
         final String devemail = prefs.getString(ConfigActivity.DEV_EMAIL_KEY,null);
         if (buttonPressed) {
 //            if (devemail != null) {
-            HashMap<String, String> actionResult = new HashMap<String, String>();
+//            HashMap<String, String> actionResult = new HashMap<String, String>();
             actionResult.put("email", "Failed");
-            actionResult.put("file", "Failed");
-            boolean hasPermission = (ContextCompat.checkSelfPermission(MainActivity.this,
-                    Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED);
-            if(hasPermission){
-                ObdGatewayService.saveLogcatToFile(getApplicationContext(), devemail, actionResult);
-                canBUSUpdate(emailLogs, emailLogs, actionResult.get("email"));
-                canBUSUpdate(fileCreation, fileCreation, actionResult.get("file"));
-            }else{
-                // ask the permission
-                Log.d(TAG, "about to ask for permission request");
-                ActivityCompat.requestPermissions(MainActivity.this,
-                        new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
-                        REQUEST_WRITE_STORAGE);
-                // You have to put nothing here (you can't write here since you don't
-                // have the permission yet and requestPermissions is called asynchronously)
-            }
+//            actionResult.put("file", "Failed");
+//            boolean hasPermission = (ContextCompat.checkSelfPermission(MainActivity.this,
+//                    Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED);
+//            if(hasPermission){
+            ObdGatewayService.saveLogcatToFile(getApplicationContext(), devemail, actionResult, AbsLogFileName);
+            canBUSUpdate(emailLogs, emailLogs, actionResult.get("email"));
+            canBUSUpdate(fileCreation, fileCreation, actionResult.get("file"));
+//            canBUSUpdate(fileCreation, fileCreation, actionResult.get("file"));
+//            }else{
+//                // ask the permission
+//                Log.d(TAG, "about to ask for permission request");
+//                ActivityCompat.requestPermissions(MainActivity.this,
+//                        new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+//                        REQUEST_WRITE_STORAGE);
+//                // You have to put nothing here (you can't write here since you don't
+//                // have the permission yet and requestPermissions is called asynchronously)
+//            }
 
 
 //                Log.d(TAG, "email sent log in the main activity " + actionResult.get("email"));
 
 
-//                DialogInterface.OnClickListener dialogClickListener = new DialogInterface.OnClickListener() {
-//                    @Override
-//                    public void onClick(DialogInterface dialog, int which) {
-//                        switch (which) {
-//                            case DialogInterface.BUTTON_POSITIVE:
-//                                ObdGatewayService.saveLogcatToFile(getApplicationContext(), devemail);
-//                                break;
-//
-//                            case DialogInterface.BUTTON_NEGATIVE:
-//                                //No button clicked
-//                                break;
-//                        }
-//                    }
-//                };
-//                AlertDialog.Builder builder = new AlertDialog.Builder(this);
-//                builder.setMessage("Where there issues?\nThen please send us the logs.\nSend Logs?").setPositiveButton("Yes", dialogClickListener)
-//                        .setNegativeButton("No", dialogClickListener).show();
-//            }
+
         }
-//
-//        if (myCSVWriter != null) {
-//            myCSVWriter.closeLogCSVWriter();
-//        }
+
     }
 
     @Override
@@ -658,12 +636,13 @@ public class MainActivity extends RoboActivity implements ObdProgressListener, L
                 // If request is cancelled, the result arrays are empty.
                 if (grantResults.length > 0
                         && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    HashMap<String, String> actionResult = new HashMap<String, String>();
-                    actionResult.put("email", "Failed");
-                    actionResult.put("file", "Failed");
-                    ObdGatewayService.saveLogcatToFile(getApplicationContext(), "", actionResult);
-                    canBUSUpdate(emailLogs, emailLogs, actionResult.get("email"));
-                    canBUSUpdate(fileCreation, fileCreation, actionResult.get("file"));
+                    createFoldersStartWriting();
+//                    HashMap<String, String> actionResult = new HashMap<String, String>();
+//                    actionResult.put("email", "Failed");
+//                    actionResult.put("file", "Failed");
+//                    ObdGatewayService.saveLogcatToFile(getApplicationContext(), "", actionResult, AbsLogFileName);
+//                    canBUSUpdate(emailLogs, emailLogs, actionResult.get("email"));
+//                    canBUSUpdate(fileCreation, fileCreation, actionResult.get("file"));
                     // permission was granted, yay! Do the
                     // contacts-related task you need to do.
 
@@ -678,6 +657,43 @@ public class MainActivity extends RoboActivity implements ObdProgressListener, L
             // other 'case' lines to check for other
             // permissions this app might request.
         }
+    }
+
+    private void createFoldersStartWriting() {
+
+        File appDirectory = new File( Environment.getExternalStorageDirectory() + File.separator + "AmpCanReaderSystem" );
+        File logDirectory = new File( appDirectory + File.separator + "log" );
+        Long mils = System.currentTimeMillis();
+        SimpleDateFormat sdf = new SimpleDateFormat("_dd_MMM_yyyy_HH_mm_ss");
+        String fileName = "OBDReader_logcat_"+sdf.format(new Date(mils)).toString()+".txt";
+
+        File logFile = new File( logDirectory, fileName + ".txt" );
+        AbsLogFileName = logFile.getAbsolutePath();
+        // create app folder
+        if ( !appDirectory.exists() ) {
+            appDirectory.mkdir();
+        }
+
+        // create log folder
+        if ( !logDirectory.exists() ) {
+            logDirectory.mkdir();
+        }
+
+        // clear the previous logcat and then write the new one to the file
+        try {
+            Process process = Runtime.getRuntime().exec("logcat -c");
+            try {
+                process.waitFor();
+            } catch (Exception e ) {
+                e.printStackTrace();
+            }
+            process = Runtime.getRuntime().exec("logcat -v threadtime -f " + logFile);
+            actionResult.put("file", "success");
+
+        } catch ( IOException e ) {
+            e.printStackTrace();
+        }
+
     }
 
     protected void endTrip() {

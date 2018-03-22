@@ -213,7 +213,7 @@ public class writerThread extends Thread {
             try {
 
                 b = (byte) elmInputStream.read();
-                Log.d(TAG, "Input From Elm Has arrived");
+//                Log.d(TAG, "Input From Elm Has arrived");
 
             } catch (Exception e) {
                 e.printStackTrace();
@@ -229,7 +229,7 @@ public class writerThread extends Thread {
             c = (char) b;
             if (c == '>' || c == '<' || c == '\r' )
             {
-                Log.d(TAG, "complete message has arrived");
+//                Log.d(TAG, "complete message has arrived");
 //                if (!res.toString().equals("DATA ERROR")) {
                 final String byteData = res.toString().replaceAll("(\n" +
                         "|\r" + "|<" + "|\\bAT\\s?MA\\b" + "|\\s+" + "|>"+
@@ -249,7 +249,7 @@ public class writerThread extends Thread {
                         Pattern p = Pattern.compile("^[0-9A-F]+$");
                         Matcher m = p.matcher(byteData);
                         if (byteData.length() == messageLengthWithID && m.find()) {
-                            Log.d(TAG, "complete message has arrived");
+//                            Log.d(TAG, "complete message has arrived");
                             if (didGrabAllMsgs(byteData, IdDataMap)) {
                                 ((MainActivity) ctxUi).runOnUiThread(new Runnable() {
                                     @Override
