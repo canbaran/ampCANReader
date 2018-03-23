@@ -559,7 +559,7 @@ public class writerThread extends Thread {
                     connectionEstablished = true;
                     break;
                 } catch (Exception e2) {
-                    Log.e(TAG, "There was an error while establishing Bluetooth connection. Stopping app..", e2);
+                    Log.e(TAG, "In Re-Trying Bluetooth Connection, there was an error while establishing Bluetooth connection. ", e2);
                     throw new IOException();
                 }
             }

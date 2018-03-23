@@ -105,8 +105,9 @@ public class MainActivity extends RoboActivity implements ObdProgressListener, L
     private static final int VISUALS = 12;
     private static boolean bluetoothDefaultIsEnable = false;
     private static final int REQUEST_WRITE_STORAGE=1;
-    private String AbsLogFileName;
+    private File logFile;
     private HashMap<String, String> actionResult = new HashMap<String,String>();
+    private Process LogProcess;
 
     //database variables
     private MyDatabase database;
@@ -596,7 +597,10 @@ public class MainActivity extends RoboActivity implements ObdProgressListener, L
 
         releaseWakeLockIfHeld();
 
-        final String devemail = prefs.getString(ConfigActivity.DEV_EMAIL_KEY,null);
+//        final String devemail = prefs.getString(ConfigActivity.DEV_EMAIL_KEY,null);
+        final String vinNumber = prefs.getString(ConfigActivity.VEHICLE_ID_KEY, null);
+        final String userName = prefs.getString(ConfigActivity.userName, null);
+
         if (buttonPressed) {
 //            if (devemail != null) {
 //            HashMap<String, String> actionResult = new HashMap<String, String>();
@@ -605,7 +609,7 @@ public class MainActivity extends RoboActivity implements ObdProgressListener, L
 //            boolean hasPermission = (ContextCompat.checkSelfPermission(MainActivity.this,
 //                    Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED);
 //            if(hasPermission){
-            ObdGatewayService.saveLogcatToFile(getApplicationContext(), devemail, actionResult, AbsLogFileName);
+            ObdGatewayService.saveLogcatToFile(getApplicationContext(), vinNumber, actionResult, logFile, userName, LogProcess);
             canBUSUpdate(emailLogs, emailLogs, actionResult.get("email"));
             canBUSUpdate(fileCreation, fileCreation, actionResult.get("file"));
 //            canBUSUpdate(fileCreation, fileCreation, actionResult.get("file"));
@@ -667,8 +671,8 @@ public class MainActivity extends RoboActivity implements ObdProgressListener, L
         SimpleDateFormat sdf = new SimpleDateFormat("_dd_MMM_yyyy_HH_mm_ss");
         String fileName = "OBDReader_logcat_"+sdf.format(new Date(mils)).toString()+".txt";
 
-        File logFile = new File( logDirectory, fileName + ".txt" );
-        AbsLogFileName = logFile.getAbsolutePath();
+        logFile = new File( logDirectory, fileName + ".txt" );
+//        AbsLogFileName = logFile.getAbsolutePath();
         // create app folder
         if ( !appDirectory.exists() ) {
             appDirectory.mkdir();
@@ -682,12 +686,13 @@ public class MainActivity extends RoboActivity implements ObdProgressListener, L
         // clear the previous logcat and then write the new one to the file
         try {
             Process process = Runtime.getRuntime().exec("logcat -c");
+
             try {
                 process.waitFor();
             } catch (Exception e ) {
                 e.printStackTrace();
             }
-            process = Runtime.getRuntime().exec("logcat -v threadtime -f " + logFile);
+            LogProcess = Runtime.getRuntime().exec("logcat -v threadtime -f " + logFile);
             actionResult.put("file", "success");
 
         } catch ( IOException e ) {

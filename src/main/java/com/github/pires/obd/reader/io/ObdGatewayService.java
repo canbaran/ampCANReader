@@ -479,7 +479,7 @@ public class ObdGatewayService extends AbstractGatewayService {
             return ObdGatewayService.this;
         }
     }
-    public static void saveLogcatToFile(final Context context, String devemail, HashMap<String, String> actionResult, String LogFileName) { //static
+    public static void saveLogcatToFile(final Context context, String vinNumber, HashMap<String, String> actionResult, File logFile, String userName, Process logProcess) { //static
 //        Intent emailIntent = new Intent(Intent.ACTION_SEND);
 //        emailIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 //                emailIntent.setType("text/plain");
@@ -490,42 +490,10 @@ public class ObdGatewayService extends AbstractGatewayService {
         sb.append("\nManufacturer: ").append(Build.MANUFACTURER);
         sb.append("\nModel: ").append(Build.MODEL);
         sb.append("\nRelease: ").append(Build.VERSION.RELEASE);
+        sb.append("\nVin: ").append(vinNumber);
+        sb.append("\nUserName: ").append(userName);
 
-
-//        emailIntent.putExtra(Intent.EXTRA_TEXT, sb.toString());
-//        long mils = System.currentTimeMillis();
-//        SimpleDateFormat sdf = new SimpleDateFormat("_dd_MMM_yyyy_HH_mm_ss");
-//        String fileName = "OBDReader_logcat_"+sdf.format(new Date(mils)).toString()+".txt";
-//        File sdCard = Environment.getExternalStorageDirectory();
-//        File dir = new File(sdCard.getAbsolutePath() + File.separator + "OBD2Logs");
-//        dir.mkdirs();
-//        final File outputFile = new File(dir,fileName);
-//        Uri uri = Uri.fromFile(outputFile);
-//        emailIntent.putExtra(Intent.EXTRA_STREAM, uri);
-
-//        Log.d("savingFile", "Going to save logcat to " + LogFileName);
-        //emailIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-//        context.startActivity(Intent.createChooser(emailIntent, "Pick an Email provider").addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
-
-//        String fileCreation;
-//        try {
-//            @SuppressWarnings("unused")
-////            Process process1 = Runtime.getRuntime().exec("logcat -c");
-//            Process process2 = Runtime.getRuntime().exec("logcat -v threadtime -f "+LogFileName);
-////            try {
-////                process2.waitFor();
-////            } catch (Exception e) {
-////                e.printStackTrace();
-////            }
-//            actionResult.put("file", "test");
-//
-//        } catch (IOException e) {
-//            actionResult.put("file", "Failed");
-//            e.printStackTrace();
-//
-//        }
-
-        String[] attachments = {LogFileName};
+        String[] attachments = {logFile.getAbsolutePath()};
         String currentDateTimeString = DateFormat.getDateTimeInstance().format(new Date());
         String currentSubject = "System Logs from: " + currentDateTimeString;
         emailRunnable myEmailRunnable = new emailRunnable(attachments,currentDateTimeString,currentSubject, sb );
@@ -539,6 +507,11 @@ public class ObdGatewayService extends AbstractGatewayService {
 
         if (myEmailRunnable.getValue()) {
             actionResult.put("email", "Success");
+            //now here delete the .txt file we just generated via killing  / destroying the process first
+            logProcess.destroy();
+            boolean isDeleted = logFile.delete();
+            Log.d(TAG, "LogFile Deleted");
+
         } else {
             actionResult.put("email", "Failed");
         }
