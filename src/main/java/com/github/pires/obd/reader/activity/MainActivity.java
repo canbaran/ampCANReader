@@ -602,33 +602,15 @@ public class MainActivity extends RoboActivity implements ObdProgressListener, L
         final String userName = prefs.getString(ConfigActivity.userName, null);
 
         if (buttonPressed) {
-//            if (devemail != null) {
-//            HashMap<String, String> actionResult = new HashMap<String, String>();
             actionResult.put("email", "Failed");
-//            actionResult.put("file", "Failed");
-//            boolean hasPermission = (ContextCompat.checkSelfPermission(MainActivity.this,
-//                    Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED);
-//            if(hasPermission){
             ObdGatewayService.saveLogcatToFile(getApplicationContext(), vinNumber, actionResult, logFile, userName, LogProcess);
             canBUSUpdate(emailLogs, emailLogs, actionResult.get("email"));
             canBUSUpdate(fileCreation, fileCreation, actionResult.get("file"));
-//            canBUSUpdate(fileCreation, fileCreation, actionResult.get("file"));
-//            }else{
-//                // ask the permission
-//                Log.d(TAG, "about to ask for permission request");
-//                ActivityCompat.requestPermissions(MainActivity.this,
-//                        new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
-//                        REQUEST_WRITE_STORAGE);
-//                // You have to put nothing here (you can't write here since you don't
-//                // have the permission yet and requestPermissions is called asynchronously)
-//            }
-
-
-//                Log.d(TAG, "email sent log in the main activity " + actionResult.get("email"));
-
-
+            Log.d(TAG, "Stop Data button callback finished executing" );
 
         }
+
+
 
     }
 
