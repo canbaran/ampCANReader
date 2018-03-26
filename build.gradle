@@ -74,6 +74,8 @@ dependencies {
     //compile group: 'javax.mail', name: 'mail', version: '1.4.1'
     compile 'com.sun.mail:android-mail:1.5.5'
     compile 'com.sun.mail:android-activation:1.5.5'
+    implementation "com.google.android.gms:play-services-location:12.0.0"
+
 
     //    debugCompile 'com.amitshekhar.android:debug-db:1.0.3'
     //    compile 'com.android.support.constraint:constraint-layout:1.0.2'

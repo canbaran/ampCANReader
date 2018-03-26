@@ -9,6 +9,7 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentSender;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
@@ -26,7 +27,9 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.IBinder;
+import android.os.Looper;
 import android.os.PowerManager;
+import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
@@ -42,6 +45,10 @@ import android.widget.TableLayout;
 import android.widget.TableRow;
 import android.widget.TextView;
 
+import com.amazonaws.auth.CognitoCachingCredentialsProvider;
+import com.amazonaws.mobileconnectors.dynamodbv2.dynamodbmapper.DynamoDBMapper;
+import com.amazonaws.regions.Regions;
+import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
 import com.github.pires.obd.commands.ObdCommand;
 import com.github.pires.obd.commands.SpeedCommand;
 import com.github.pires.obd.commands.engine.RPMCommand;
@@ -58,10 +65,23 @@ import com.github.pires.obd.reader.io.ObdCommandJob;
 import com.github.pires.obd.reader.io.ObdGatewayService;
 import com.github.pires.obd.reader.io.ObdProgressListener;
 import com.github.pires.obd.reader.io.can_data;
+import com.github.pires.obd.reader.io.gpsData;
 import com.github.pires.obd.reader.net.ObdReading;
 import com.github.pires.obd.reader.net.ObdService;
 import com.github.pires.obd.reader.trips.TripLog;
 import com.github.pires.obd.reader.trips.TripRecord;
+import com.google.android.gms.common.api.ResolvableApiException;
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationCallback;
+import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationResult;
+import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.location.LocationSettingsRequest;
+import com.google.android.gms.location.LocationSettingsResponse;
+import com.google.android.gms.location.SettingsClient;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
 import com.google.inject.Inject;
 
 import java.io.File;
@@ -105,9 +125,19 @@ public class MainActivity extends RoboActivity implements ObdProgressListener, L
     private static final int VISUALS = 12;
     private static boolean bluetoothDefaultIsEnable = false;
     private static final int REQUEST_WRITE_STORAGE=1;
+    private static final int REQUEST_FINE_LOCATION=2;
+    private static final int REQUEST_CHECK_SETTINGS=3;
     private File logFile;
     private HashMap<String, String> actionResult = new HashMap<String,String>();
     private Process LogProcess;
+    //location variables
+    private Runnable mTimer1;
+    private final Handler mHandler = new Handler();
+    private FusedLocationProviderClient mFusedLocationClient;
+    private LocationRequest mLocationRequest;
+    private boolean mRequestingLocationUpdates = true;
+    private LocationCallback mLocationCallback;
+    private final static String REQUESTING_LOCATION_UPDATES_KEY = "requesting-location-updates-key";
 
     //database variables
     private MyDatabase database;
@@ -362,7 +392,7 @@ public class MainActivity extends RoboActivity implements ObdProgressListener, L
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-
+        setUpLocationRequest();
 
 
         final BluetoothAdapter btAdapter = BluetoothAdapter.getDefaultAdapter();
@@ -380,6 +410,39 @@ public class MainActivity extends RoboActivity implements ObdProgressListener, L
         context = this.getApplicationContext();
         // create a log instance for use by this application
         triplog = TripLog.getInstance(context);
+
+        updateValuesFromBundle(savedInstanceState);
+    }
+
+    private void updateValuesFromBundle(Bundle savedInstanceState) {
+        if (savedInstanceState == null) {
+            return;
+        }
+
+        // Update the value of mRequestingLocationUpdates from the Bundle.
+        if (savedInstanceState.keySet().contains(REQUESTING_LOCATION_UPDATES_KEY)) {
+            mRequestingLocationUpdates = savedInstanceState.getBoolean(
+                    REQUESTING_LOCATION_UPDATES_KEY);
+        }
+
+    }
+
+    private void setUpLocationRequest() {
+
+        boolean hasPermission = (ContextCompat.checkSelfPermission(MainActivity.this,
+                Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED);
+        if(hasPermission){
+            initializeLocationProcess();
+        }else{
+            // ask the permission
+            Log.d(TAG, "about to ask for permission request");
+            ActivityCompat.requestPermissions(MainActivity.this,
+                    new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
+                    REQUEST_FINE_LOCATION);
+        }
+
+
+
     }
 
     private void startLogWriteOperations() {
@@ -459,6 +522,19 @@ public class MainActivity extends RoboActivity implements ObdProgressListener, L
         super.onPause();
         Log.d(TAG, "Pausing..");
         releaseWakeLockIfHeld();
+        stopLocationUpdates();
+    }
+
+    private void stopLocationUpdates() {
+        mFusedLocationClient.removeLocationUpdates(mLocationCallback);
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        outState.putBoolean(REQUESTING_LOCATION_UPDATES_KEY,
+                mRequestingLocationUpdates);
+
+        super.onSaveInstanceState(outState);
     }
 
     /**
@@ -487,6 +563,12 @@ public class MainActivity extends RoboActivity implements ObdProgressListener, L
             preRequisites = btAdapter.enable();
         }
 
+
+        if (mRequestingLocationUpdates) {
+            Log.d(TAG, "starting location updates");
+            startLocationUpdates();
+        }
+
 //        gpsInit();
         if (!preRequisites) {
             showDialog(BLUETOOTH_DISABLED);
@@ -494,6 +576,25 @@ public class MainActivity extends RoboActivity implements ObdProgressListener, L
         } else {
             btStatusTextView.setText(getString(R.string.status_bluetooth_ok));
         }
+    }
+
+    private void startLocationUpdates() {
+
+
+        mTimer1 = new Runnable() {
+            @Override
+            public void run() {
+                Log.d(TAG, "in the runnable");
+                mFusedLocationClient.requestLocationUpdates(mLocationRequest,
+                        mLocationCallback,
+                        Looper.myLooper());
+
+                mHandler.postDelayed(this, 10000);
+            }
+        };
+        mHandler.postDelayed(mTimer1, 10000);
+
+
     }
 
     private void updateConfig() {
@@ -555,6 +656,8 @@ public class MainActivity extends RoboActivity implements ObdProgressListener, L
         Log.d(TAG, "Starting live data..");
 
         startLogWriteOperations();
+
+
 
         tl.removeAllViews(); //start fresh
         doBindService();
@@ -625,19 +728,18 @@ public class MainActivity extends RoboActivity implements ObdProgressListener, L
                 if (grantResults.length > 0
                         && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                     createFoldersStartWriting();
-//                    HashMap<String, String> actionResult = new HashMap<String, String>();
-//                    actionResult.put("email", "Failed");
-//                    actionResult.put("file", "Failed");
-//                    ObdGatewayService.saveLogcatToFile(getApplicationContext(), "", actionResult, AbsLogFileName);
-//                    canBUSUpdate(emailLogs, emailLogs, actionResult.get("email"));
-//                    canBUSUpdate(fileCreation, fileCreation, actionResult.get("file"));
-                    // permission was granted, yay! Do the
-                    // contacts-related task you need to do.
-
                 } else {
                     Log.d(TAG, "cannot write the logs into file and email");
-                    // permission denied, boo! Disable the
-                    // functionality that depends on this permission.
+                }
+                return;
+            }
+            case REQUEST_FINE_LOCATION: {
+                // If request is cancelled, the result arrays are empty.
+                if (grantResults.length > 0
+                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    initializeLocationProcess();
+                } else {
+                    Log.d(TAG, "cannot write the logs into file and email");
                 }
                 return;
             }
@@ -645,6 +747,113 @@ public class MainActivity extends RoboActivity implements ObdProgressListener, L
             // other 'case' lines to check for other
             // permissions this app might request.
         }
+    }
+
+    private void initializeLocationProcess() {
+        mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
+        mFusedLocationClient.getLastLocation()
+                .addOnSuccessListener(this, new OnSuccessListener<Location>() {
+                    @Override
+                    public void onSuccess(Location location) {
+                        // Got last known location. In some rare situations this can be null.
+                        if (location != null) {
+                            // Logic to handle location object
+                            Log.d(TAG, "location null");
+                        }
+                    }
+                });
+
+
+        //create Location Request
+        createLocationRequest();
+
+        mLocationCallback = new LocationCallback() {
+            @Override
+            public void onLocationResult(LocationResult locationResult) {
+                Log.d(TAG, "call back entered");
+                if (locationResult == null) {
+                    Log.d(TAG, "location  Result null");
+                    return;
+                }
+                for (Location location : locationResult.getLocations()) {
+
+                    final Location curLocation = location;
+                    //log to android that a drive took place between t0 and t1
+                    new Thread(new Runnable() {
+                        public void run() {
+                            Log.d(TAG, "location AWS work");
+                            storeGPSDataToAWS( curLocation );
+                        }
+                    }).start();
+
+
+                    Log.d(TAG, "Lat info: " + Double.toString(location.getLatitude()));
+                    // Update UI with location data
+                    // ...
+                }
+            };
+        };
+
+    }
+
+    private void storeGPSDataToAWS( Location curLocation ) {
+        gpsData curGPSData = new gpsData();
+        curGPSData.setVIN(prefs.getString(ConfigActivity.VEHICLE_ID_KEY, ""));
+        curGPSData.setTimeStamp(System.currentTimeMillis());
+        curGPSData.setLatitude(curLocation.getLatitude());
+        curGPSData.setLongitude(curLocation.getLongitude());
+
+        CognitoCachingCredentialsProvider credentialsProvider = new CognitoCachingCredentialsProvider(
+                getApplicationContext(),
+                "us-east-1:2ee7fe14-536e-4291-898a-e8408bce1040", // Identity pool ID
+                Regions.US_EAST_1 // Region
+        );
+        AmazonDynamoDBClient ddbClient = new AmazonDynamoDBClient(credentialsProvider);
+        DynamoDBMapper mapper = new DynamoDBMapper(ddbClient);
+
+        try {
+            mapper.save(curGPSData);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+    }
+
+    private void createLocationRequest() {
+        LocationSettingsRequest.Builder builder = new LocationSettingsRequest.Builder();
+        SettingsClient client = LocationServices.getSettingsClient(this);
+        Task<LocationSettingsResponse> task = client.checkLocationSettings(builder.build());
+        task.addOnSuccessListener(this, new OnSuccessListener<LocationSettingsResponse>() {
+            @Override
+            public void onSuccess(LocationSettingsResponse locationSettingsResponse) {
+                // All location settings are satisfied. The client can initialize
+                // location requests here.
+                mLocationRequest = new LocationRequest();
+                mLocationRequest.setInterval(10000);
+                mLocationRequest.setFastestInterval(5000);
+                mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+            }
+        });
+
+        task.addOnFailureListener(this, new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+                if (e instanceof ResolvableApiException) {
+                    // Location settings are not satisfied, but this can be fixed
+                    // by showing the user a dialog.
+                    try {
+                        // Show the dialog by calling startResolutionForResult(),
+                        // and check the result in onActivityResult().
+                        ResolvableApiException resolvable = (ResolvableApiException) e;
+                        resolvable.startResolutionForResult(MainActivity.this,
+                                REQUEST_CHECK_SETTINGS);
+                    } catch (IntentSender.SendIntentException sendEx) {
+                        // Ignore the error.
+                    }
+                }
+            }
+        });
+
     }
 
     private void createFoldersStartWriting() {
