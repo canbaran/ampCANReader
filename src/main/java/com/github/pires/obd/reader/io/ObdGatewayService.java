@@ -462,16 +462,50 @@ public class ObdGatewayService extends AbstractGatewayService {
         jobsQueue.removeAll(jobsQueue); // TODO is this safe?
         isRunning = false;
 
-        if (sock != null)
+        if (sock != null) {
             // close socket
             try {
                 sock.close();
             } catch (IOException e) {
                 Log.e(TAG, e.getMessage());
             }
+        }
+        //log to android that a drive took place between t0 and t1
+        new Thread(new Runnable() {
+            public void run() {
+                logTripData();
+            }
+        }).start();
+
+
+
+
 
         // kill service
         stopSelf();
+    }
+
+    private void logTripData() {
+
+        tripData currentTrip = new tripData();
+        currentTrip.setVIN(prefs.getString(ConfigActivity.VEHICLE_ID_KEY, ""));
+        currentTrip.setStartTimeStamp(startTime);
+        currentTrip.setEndTimestamp(System.currentTimeMillis());
+
+        CognitoCachingCredentialsProvider credentialsProvider = new CognitoCachingCredentialsProvider(
+                getApplicationContext(),
+                "us-east-1:2ee7fe14-536e-4291-898a-e8408bce1040", // Identity pool ID
+                Regions.US_EAST_1 // Region
+        );
+        AmazonDynamoDBClient ddbClient = new AmazonDynamoDBClient(credentialsProvider);
+        DynamoDBMapper mapper = new DynamoDBMapper(ddbClient);
+
+        try {
+            mapper.save(currentTrip);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
     }
 
     public boolean isRunning() {
@@ -714,6 +748,40 @@ public class ObdGatewayService extends AbstractGatewayService {
 
         public void setCanIDMeaning(String canIDMeaning) {
             this.canIDMeaning = canIDMeaning;
+        }
+
+
+    }
+
+
+    @DynamoDBTable(tableName = "tripData")
+    public class tripData {
+        private String vin;
+        private long startTimestamp;
+        private long endTimestamp;
+
+        @DynamoDBRangeKey(attributeName = "startTimestamp") //DynamoDBIndexRangeKey
+        public long getStartTimeStamp() {
+            return startTimestamp;
+        }
+        public void setStartTimeStamp(long timestamp) {
+            this.startTimestamp = timestamp;
+        }
+
+        @DynamoDBHashKey(attributeName = "vin") //DynamoDBIndexHashKey
+        public String getVIN() {
+            return vin;
+        }
+        public void setVIN(String vin) {
+            this.vin = vin;
+        }
+
+        @DynamoDBAttribute(attributeName = "endTimestamp")
+        public long getEndTimestamp() {
+            return endTimestamp;
+        }
+        public void setEndTimestamp(long timestamp) {
+            this.endTimestamp = timestamp;
         }
 
 

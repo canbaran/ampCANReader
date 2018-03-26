@@ -61,12 +61,6 @@ public class readerThread extends Thread {
         {
             try
             {
-//                ((MainActivity) ctxUi).runOnUiThread(new Runnable() {
-//                    @Override
-//                    public void run() {
-//                        ((MainActivity) ctxUi).canBUSUpdate( awsUploadStatus,  awsUploadStatus,  "Uploader Started");
-//                    }
-//                });
                 CognitoCachingCredentialsProvider credentialsProvider = new CognitoCachingCredentialsProvider(
                         appContext,
                         "us-east-1:2ee7fe14-536e-4291-898a-e8408bce1040", // Identity pool ID
@@ -74,7 +68,6 @@ public class readerThread extends Thread {
                 );
                 AmazonDynamoDBClient ddbClient = new AmazonDynamoDBClient(credentialsProvider);
                 DynamoDBMapper mapper = new DynamoDBMapper(ddbClient);
-
                 String SubmissionStatus = "sent";
                 List<DynamoDBMapper.FailedBatch> temp = null;
                 while (myService.isRunning() || myQ.size()>0) {

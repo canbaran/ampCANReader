@@ -362,7 +362,7 @@ public class MainActivity extends RoboActivity implements ObdProgressListener, L
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        startLogWriteOperations();
+
 
 
         final BluetoothAdapter btAdapter = BluetoothAdapter.getDefaultAdapter();
@@ -553,6 +553,8 @@ public class MainActivity extends RoboActivity implements ObdProgressListener, L
 
     public void startLiveData() {
         Log.d(TAG, "Starting live data..");
+
+        startLogWriteOperations();
 
         tl.removeAllViews(); //start fresh
         doBindService();
