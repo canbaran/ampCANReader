@@ -46,7 +46,7 @@ public class gpsData {
         return longitude;
     }
     public void setLongitude (double longitude) {
-        this.longitude = latitude;
+        this.longitude = longitude;
 
     }
 

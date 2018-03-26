@@ -673,7 +673,8 @@ public class MainActivity extends RoboActivity implements ObdProgressListener, L
             Log.d(TAG, "GPS Info");
             //gpsStart();
         else
-            gpsStatusTextView.setText(getString(R.string.status_gps_not_used));
+            Log.d(TAG, "GPS not USED Entered");
+            //gpsStatusTextView.setText(getString(R.string.status_gps_not_used));
 
         // screen won't turn off until wakeLock.release()
         wakeLock.acquire();
@@ -777,17 +778,32 @@ public class MainActivity extends RoboActivity implements ObdProgressListener, L
                 }
                 for (Location location : locationResult.getLocations()) {
 
+
+//                    Log.d(TAG, "Lat info: " + Double.toString(location.getLatitude()));
+//                    Log.d(TAG, "Long info: " + Double.toString(location.getLongitude()));
+                    final double curLongitude = location.getLongitude();
+                    final double curLatitude = location.getLatitude();
+
+                    StringBuilder sb = new StringBuilder();
+                    sb.append("Lat: ");
+                    sb.append(String.valueOf(curLatitude).substring(0, 5));
+                    sb.append(" Lon: ");
+                    sb.append(String.valueOf(curLongitude).substring(0, 5));
+//                    sb.append(" Alt: ");
+//                    sb.append(String.valueOf(mLastLocation.getAltitude()));
+                    gpsStatusTextView.setText(sb.toString());
+
                     final Location curLocation = location;
                     //log to android that a drive took place between t0 and t1
                     new Thread(new Runnable() {
                         public void run() {
                             Log.d(TAG, "location AWS work");
-                            storeGPSDataToAWS( curLocation );
+                            storeGPSDataToAWS( curLatitude, curLongitude );
                         }
                     }).start();
 
 
-                    Log.d(TAG, "Lat info: " + Double.toString(location.getLatitude()));
+
                     // Update UI with location data
                     // ...
                 }
@@ -796,12 +812,16 @@ public class MainActivity extends RoboActivity implements ObdProgressListener, L
 
     }
 
-    private void storeGPSDataToAWS( Location curLocation ) {
+    private void storeGPSDataToAWS( double curLatitude, double curLongitude ) {
+//        Log.d(TAG, "cur Lat" + Double.toString(curLatitude));
+//        Log.d(TAG, "cur Long" + Double.toString(curLongitude));
+
+
         gpsData curGPSData = new gpsData();
         curGPSData.setVIN(prefs.getString(ConfigActivity.VEHICLE_ID_KEY, ""));
         curGPSData.setTimeStamp(System.currentTimeMillis());
-        curGPSData.setLatitude(curLocation.getLatitude());
-        curGPSData.setLongitude(curLocation.getLongitude());
+        curGPSData.setLatitude(curLatitude);
+        curGPSData.setLongitude(curLongitude);
 
         CognitoCachingCredentialsProvider credentialsProvider = new CognitoCachingCredentialsProvider(
                 getApplicationContext(),
