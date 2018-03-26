@@ -530,7 +530,7 @@ public class ObdGatewayService extends AbstractGatewayService {
         sb.append("\nRelease: ").append(Build.VERSION.RELEASE);
         sb.append("\nVin: ").append(vinNumber);
         sb.append("\nUserName: ").append(userName);
-        logProcess.destroy();
+//        logProcess.destroy();
         String[] temp = logFile.getAbsolutePath().split("\\.");
         String toLocation = temp[0] + ".zip";
         boolean zipped =  zipFileAtPath(logFile.getAbsolutePath(), toLocation);
@@ -553,8 +553,8 @@ public class ObdGatewayService extends AbstractGatewayService {
             actionResult.put("email", "Success");
             //now here delete the .txt file we just generated via killing  / destroying the process first
 
-            boolean isDeleted = logFile.delete();
-            Log.d(TAG, "LogFile Deleted");
+//            boolean isDeleted = logFile.delete();
+//            Log.d(TAG, "LogFile Deleted");
 
         } else {
             actionResult.put("email", "Failed");
